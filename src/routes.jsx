@@ -26,19 +26,23 @@ export const getRoutesByRole = (role) => {
   // ROUTES visible for ALL (admin + manager + employee)
   const baseRoutes = [
     {
-      icon: <HomeIcon {...icon} />,
-      name: "Dashboard",
-      path: "/home",
-      element: <Home />,
-    },
-    {
       icon: <UserCircleIcon {...icon} />,
       name: "Profile",
       path: "/profile",
       element: <Profile />,
     },
-   
+
   ];
+
+  // ⭐ DASHBOARD (HOME) - visible for Admin & Manager ONLY
+  if (role !== "employee") {
+    baseRoutes.unshift({
+      icon: <HomeIcon {...icon} />,
+      name: "Dashboard",
+      path: "/home",
+      element: <Home />,
+    });
+  }
 
   // ⭐ ADMIN ONLY ROUTES
   const adminRoutes = [
@@ -56,12 +60,12 @@ export const getRoutesByRole = (role) => {
     },
   ];
 
-   // ⭐ If admin logged in → include admin routes
+  // ⭐ If admin logged in → include admin routes
   if (role === "admin") {
     baseRoutes.push(...adminRoutes);
   }
 
-   // ⭐ employee ONLY ROUTES
+  // ⭐ employee ONLY ROUTES
   const employeeRoutes = [
     {
       icon: <TableCellsIcon {...icon} />,
@@ -95,7 +99,7 @@ export const getRoutesByRole = (role) => {
       layout: "dashboard",
       pages: baseRoutes,
     },
-  
+
     {
       // title: "Auth Pages",
       layout: "auth",
@@ -112,7 +116,7 @@ export const getRoutesByRole = (role) => {
         //   path: "/sign-up",
         //   element: <SignUp />,
         // },
-      
+
       ],
     },
   ];

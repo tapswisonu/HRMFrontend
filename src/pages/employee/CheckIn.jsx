@@ -29,6 +29,7 @@ import {
 export default function CheckIn({ onActionComplete }) {
   const dispatch = useDispatch();
   const attendance = useSelector((s) => s.attendance);
+  const { user } = useSelector((s) => s.auth);
 
   const deviceId = getDeviceId();
 
@@ -60,18 +61,28 @@ export default function CheckIn({ onActionComplete }) {
 
     try {
       const loc = await captureLocation();
+      if (!loc) {
+        toast.error("Location access is required to check in.");
+        setCheckingIn(false);
+        return;
+      }
       await dispatch(
         doCheckIn({
           deviceId,
           lat: loc?.lat,
           lng: loc?.lng,
+          email: user?.email,
+          userId: user?._id,
+          name: user?.name,
         })
       ).unwrap();
 
       toast.success("Checked In Successfully!");
       if (onActionComplete) onActionComplete();
 
-      // await refresh();
+      if (onActionComplete) onActionComplete();
+
+      await refresh();
     } catch (err) {
       toast.error(err?.message || "Check-In Failed");
     }
@@ -85,18 +96,28 @@ export default function CheckIn({ onActionComplete }) {
 
     try {
       const loc = await captureLocation();
+      if (!loc) {
+        toast.error("Location access is required to check out.");
+        setCheckingOut(false);
+        return;
+      }
       await dispatch(
         doCheckOut({
           deviceId,
           lat: loc?.lat,
           lng: loc?.lng,
+          email: user?.email,
+          userId: user?._id,
+          name: user?.name,
         })
       ).unwrap();
 
       toast.success("Checked Out Successfully!");
       if (onActionComplete) onActionComplete();
 
-      // await refresh();
+      if (onActionComplete) onActionComplete();
+
+      await refresh();
     } catch (err) {
       toast.error(err?.message || "Check-Out Failed");
     }
@@ -132,22 +153,22 @@ export default function CheckIn({ onActionComplete }) {
         </Button> */}
 
         <Button
-  color="green"
-  className="flex items-center gap-2 px-6 py-3 shadow-md"
-  disabled={
-    checkingIn ||
-    attendance.loading ||
-    (alreadyCheckedIn && !alreadyCheckedOut)   // ❗ New logic
-  }
-  onClick={handleCheckIn}
->
-  {checkingIn ? (
-    <Spinner className="h-4 w-4" />
-  ) : (
-    <FaSignInAlt className="text-lg" />
-  )}
-  {alreadyCheckedIn && !alreadyCheckedOut ? "Checked In" : "Check In"}
-</Button>
+          color="green"
+          className="flex items-center gap-2 px-6 py-3 shadow-md"
+          disabled={
+            checkingIn ||
+            attendance.loading ||
+            (alreadyCheckedIn && !alreadyCheckedOut)   // ❗ New logic
+          }
+          onClick={handleCheckIn}
+        >
+          {checkingIn ? (
+            <Spinner className="h-4 w-4" />
+          ) : (
+            <FaSignInAlt className="text-lg" />
+          )}
+          {alreadyCheckedIn && !alreadyCheckedOut ? "Checked In" : "Check In"}
+        </Button>
 
 
         {/* CHECK OUT BUTTON */}
