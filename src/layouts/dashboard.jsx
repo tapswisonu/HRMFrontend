@@ -9,7 +9,7 @@ import {
   Footer,
 } from "@/widgets/layout";
 
-import { useMaterialTailwindController, setOpenConfigurator } from "@/context";
+import { useMaterialTailwindController, setOpenConfigurator, setOpenSidenav } from "@/context";
 
 // ⭐ NEW IMPORTS
 import { useSelector } from "react-redux";
@@ -17,7 +17,7 @@ import { getRoutesByRole } from "@/routes";
 
 export function Dashboard() {
   const [controller, dispatch] = useMaterialTailwindController();
-  const { sidenavType } = controller;
+  const { sidenavType, openSidenav } = controller;
 
   // ⭐ 1) Get logged-in user role from Redux
   const role = useSelector((state) => state.auth.user?.role);
@@ -27,7 +27,7 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-blue-gray-50/50">
-      
+
       {/* ⭐ Sidebar receives dynamic routes */}
       <Sidenav
         routes={routes}
@@ -35,6 +35,14 @@ export function Dashboard() {
           sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"
         }
       />
+
+      {/* Overlay for mobile sidenav */}
+      {openSidenav && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 xl:hidden"
+          onClick={() => setOpenSidenav(dispatch, false)}
+        />
+      )}
 
       <div className="p-4 xl:ml-80">
         <DashboardNavbar />
