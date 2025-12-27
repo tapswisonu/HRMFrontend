@@ -19,7 +19,7 @@ export default function CreateUser() {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    mobile:"",
+    mobile: "",
     password: "",
     role: "manager",
   });
@@ -33,7 +33,25 @@ export default function CreateUser() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const res = await dispatch(createUser(form));
+
+    // 🔒 STRICT VALIDATION
+    if (!form.email || form.email.trim() === "") {
+      toast.error("Email is required!");
+      return;
+    }
+
+    // 🔍 Explicit Payload Construction
+    const payload = {
+      name: form.name,
+      email: form.email.trim(),
+      mobile: form.mobile,
+      password: form.password,
+      role: form.role,
+    };
+
+    console.log("🚀 Submitting Create User Payload:", payload);
+
+    const res = await dispatch(createUser(payload));
 
     if (res.meta.requestStatus === "fulfilled") {
       navigate("/users");
@@ -55,7 +73,7 @@ export default function CreateUser() {
 
         <CardBody>
           {error && (
-             toast.error({error})
+            toast.error({ error })
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -88,9 +106,9 @@ export default function CreateUser() {
                 placeholder="Enter email"
               />
             </div>
-             <div>
+            <div>
               <Typography variant="small" className="font-medium mb-1">
-                Mobile number 
+                Mobile number
               </Typography>
               <Input
                 name="mobile"

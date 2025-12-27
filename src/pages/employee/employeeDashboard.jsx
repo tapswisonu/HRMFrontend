@@ -50,8 +50,8 @@ export default function EmployeeDashboard() {
   //   toast.success(type === "in" ? "Checked In Successfully!" : "Checked Out Successfully!");
   // };
   const handleActionComplete = () => {
-  dispatch(fetchAttendance());
-};
+    dispatch(fetchAttendance());
+  };
 
 
   const statusClasses = (status) => {
@@ -80,7 +80,7 @@ export default function EmployeeDashboard() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <Avatar
-                src="/img/user.png"
+                src="/img/bruce-mars.jpeg"
                 size="xl"
                 className="rounded-lg shadow-md shadow-blue-gray-400/30"
               />

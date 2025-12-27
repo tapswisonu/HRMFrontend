@@ -16,17 +16,17 @@ export function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
-const prevErrorRef = React.useRef(null);
+  const prevErrorRef = React.useRef(null);
   const dispatch = useDispatch();
   const { loading, error } = useSelector((s) => s.auth);
   const navigate = useNavigate();
 
- useEffect(() => {
-  if (error && error !== prevErrorRef.current) {
-    toast.error(error, { autoClose: 2500 });
-  }
-  prevErrorRef.current = error;
-}, [error]);
+  useEffect(() => {
+    if (error && error !== prevErrorRef.current) {
+      toast.error(error, { autoClose: 2500 });
+    }
+    prevErrorRef.current = error;
+  }, [error]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,9 +42,10 @@ const prevErrorRef = React.useRef(null);
       toast.success("Login successful!");
 
       // role-based redirection
-      if (role === "admin") navigate("/admin/dashboard");
-      if (role === "manager") navigate("/manager/dashboard");
-      if (role === "employee") navigate("/employee/dashboard");
+      // role-based redirection
+      if (role === "admin") navigate("/dashboard/home");
+      if (role === "manager") navigate("/dashboard/home");
+      if (role === "employee") navigate("/dashboard/employeeDashboard");
     }
   };
 
@@ -53,7 +54,7 @@ const prevErrorRef = React.useRef(null);
       <div className="w-full lg:w-3/5 mt-24">
         <div className="text-center">
           <Typography variant="h2" className="font-bold mb-4">Sign In</Typography>
-        
+
         </div>
 
         {/* FORM START */}
@@ -63,7 +64,7 @@ const prevErrorRef = React.useRef(null);
         >
           {/* Show redux error */}
           {error && (
-          toast.error({error})
+            toast.error({ error })
           )}
 
           <div className="mb-1 flex flex-col gap-6">
