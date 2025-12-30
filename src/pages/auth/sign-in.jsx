@@ -44,7 +44,6 @@ export function SignIn() {
       // role-based redirection
       // role-based redirection
       if (role === "admin") navigate("/dashboard/home");
-      if (role === "manager") navigate("/dashboard/home");
       if (role === "employee") navigate("/dashboard/employeeDashboard");
     }
   };
@@ -59,7 +58,7 @@ export function SignIn() {
 
         {/* FORM START */}
         <form
-          className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2"
+          className="mt-8 mb-2 mx-auto w-full max-w-screen-lg lg:w-1/2 px-4"
           onSubmit={handleSubmit}
         >
           {/* Show redux error */}
@@ -104,7 +103,6 @@ export function SignIn() {
               onChange={(val) => setRole(val)}
             >
               <Option value="admin">Admin</Option>
-              <Option value="manager">Manager</Option>
               <Option value="employee">Employee</Option>
             </Select>
           </div>

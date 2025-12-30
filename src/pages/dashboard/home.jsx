@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Typography,
   Card,
@@ -26,12 +26,56 @@ import {
   ordersOverviewData,
 } from "@/data";
 import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/solid";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUsersByRole } from "@/features/users/userSlice";
 
 export function Home() {
+  const dispatch = useDispatch();
+  // const { list } = useSelector((state) => state.users);
+
+  // We need to fetch both employees and admins to get accurate counts.
+  // Since our state currently holds just one list, we might need to fetch them separately
+  // or just rely on what's available. For a robust dashboard, we often need a "dashboard stats" endpoint.
+  // However, given the constraints, we will try to fetch 'employee' and 'admin' lists if possible,
+  // or we can enhance the backend to return counts.
+  // For now, let's fetch 'employee' by default to show at least those counts, or trigger parallel fetches if we can manage state.
+  // A cleaner way for the frontend without specific dashboard endpoint:
+  // We can't easily store multiple lists in the current simple userSlice 'list'.
+  // We will assume 'list' might contain mixed data if we modified the slice, but we didn't.
+  // So, let's just fetch 'employee' for now to populate the "Total Employees" card.
+
+  const [empCount, setEmpCount] = React.useState(0);
+  const [adminCount, setAdminCount] = React.useState(0);
+
+  useEffect(() => {
+    // Crude way to get counts without dedicated endpoint:
+    // 1. Fetch employees
+    dispatch(fetchUsersByRole("employee")).then((res) => {
+      if (res.payload) setEmpCount(res.payload.length || 0);
+    });
+    // 2. Fetch admins
+    dispatch(fetchUsersByRole("admin")).then((res) => {
+      if (res.payload) setAdminCount(res.payload.length || 0);
+    });
+  }, [dispatch]);
+
+  // Update the data object dynamically
+  // Note: structuredClone is modern, or we can just map.
+  const dynamicCardsData = statisticsCardsData.map((card) => {
+    if (card.title === "Total Employees") {
+      return { ...card, value: empCount.toString() };
+    }
+    if (card.title === "Total Admins") {
+      return { ...card, value: adminCount.toString() };
+    }
+    return card;
+  });
+
+
   return (
     <div className="mt-12">
       <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
-        {statisticsCardsData.map(({ icon, title, footer, ...rest }) => (
+        {dynamicCardsData.map(({ icon, title, footer, ...rest }) => (
           <StatisticsCard
             key={title}
             {...rest}
@@ -126,11 +170,10 @@ export function Home() {
               <tbody>
                 {projectsTableData.map(
                   ({ img, name, members, budget, completion }, key) => {
-                    const className = `py-3 px-5 ${
-                      key === projectsTableData.length - 1
-                        ? ""
-                        : "border-b border-blue-gray-50"
-                    }`;
+                    const className = `py-3 px-5 ${key === projectsTableData.length - 1
+                      ? ""
+                      : "border-b border-blue-gray-50"
+                      }`;
 
                     return (
                       <tr key={name}>
@@ -154,9 +197,8 @@ export function Home() {
                                 alt={name}
                                 size="xs"
                                 variant="circular"
-                                className={`cursor-pointer border-2 border-white ${
-                                  key === 0 ? "" : "-ml-2.5"
-                                }`}
+                                className={`cursor-pointer border-2 border-white ${key === 0 ? "" : "-ml-2.5"
+                                  }`}
                               />
                             </Tooltip>
                           ))}
@@ -219,11 +261,10 @@ export function Home() {
               ({ icon, color, title, description }, key) => (
                 <div key={title} className="flex items-start gap-4 py-3">
                   <div
-                    className={`relative p-1 after:absolute after:-bottom-6 after:left-2/4 after:w-0.5 after:-translate-x-2/4 after:bg-blue-gray-50 after:content-[''] ${
-                      key === ordersOverviewData.length - 1
-                        ? "after:h-0"
-                        : "after:h-4/6"
-                    }`}
+                    className={`relative p-1 after:absolute after:-bottom-6 after:left-2/4 after:w-0.5 after:-translate-x-2/4 after:bg-blue-gray-50 after:content-[''] ${key === ordersOverviewData.length - 1
+                      ? "after:h-0"
+                      : "after:h-4/6"
+                      }`}
                   >
                     {React.createElement(icon, {
                       className: `!w-5 !h-5 ${color}`,
