@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUsersByRole } from "../../features/users/userSlice";
 import { Link } from "react-router-dom";
+import AdminMap from "../../components/AdminMap";
 
 import {
   Card,
@@ -62,15 +63,15 @@ export function Users() {
               </button>
 
               <button
-                onClick={() => setRole("manager")}
+                onClick={() => setRole("admin")}
                 className={`px-5 py-2 flex items-center gap-2 transition-all duration-200
-                  ${role === "manager"
+                  ${role === "admin"
                     ? "bg-white text-gray-900 font-semibold"
                     : "text-white hover:bg-gray-700"
                   }`}
               >
                 <UserCircleIcon className="h-5 w-5" />
-                Managers
+                Admins
               </button>
 
             </div>
@@ -109,7 +110,7 @@ export function Users() {
 
             <thead className="bg-gray-100">
               <tr>
-                {["User", "Email", "Role", "Joined", ""].map((el) => (
+                {["User", "Email", "Role", "Status", "Location", "Joined", "Action"].map((el) => (
                   <th
                     key={el}
                     className="border-b border-blue-gray-50 py-3 px-5 text-left"
@@ -172,6 +173,37 @@ export function Users() {
                       />
                     </td>
 
+                    {/* STATUS & ATTENDANCE */}
+                    <td className={className}>
+                      <div>
+                        <Typography className="text-xs font-semibold" color={u.status === "Checked In" ? "green" : "blue-gray"}>
+                          {u.status || "Offline"}
+                        </Typography>
+                        {u.checkInTime && (
+                          <Typography className="text-[10px] text-gray-500">
+                            In: {new Date(u.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </Typography>
+                        )}
+                        {u.checkOutTime && (
+                          <Typography className="text-[10px] text-gray-500">
+                            Out: {new Date(u.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </Typography>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* LOCATION */}
+                    <td className={className}>
+                      <div className="flex flex-col">
+                        <Typography className="text-xs font-medium text-blue-gray-600">
+                          {u.location?.lat ? `${u.location.lat.toFixed(4)}, ${u.location.lng.toFixed(4)}` : "N/A"}
+                        </Typography>
+                        <Typography className="text-[10px] text-gray-400">
+                          {u.deviceId || "No Device"}
+                        </Typography>
+                      </div>
+                    </td>
+
                     {/* JOINED DATE */}
                     <td className={className}>
                       <Typography className="text-sm text-blue-gray-700 font-medium">
@@ -196,6 +228,11 @@ export function Users() {
           </table>
         </CardBody>
       </Card>
+
+      {/* ======================== */}
+      {/* ADMIN MAP SECTION */}
+      {/* ======================== */}
+      <AdminMap />
     </div>
   );
 }

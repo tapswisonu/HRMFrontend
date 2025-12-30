@@ -44,7 +44,6 @@ export function SignIn() {
       // role-based redirection
       // role-based redirection
       if (role === "admin") navigate("/dashboard/home");
-      if (role === "manager") navigate("/dashboard/home");
       if (role === "employee") navigate("/dashboard/employeeDashboard");
     }
   };
@@ -104,7 +103,6 @@ export function SignIn() {
               onChange={(val) => setRole(val)}
             >
               <Option value="admin">Admin</Option>
-              <Option value="manager">Manager</Option>
               <Option value="employee">Employee</Option>
             </Select>
           </div>

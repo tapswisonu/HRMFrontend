@@ -71,14 +71,14 @@ export function Sidenav({ brandImg, brandName, routes }) {
               </li>
             )}
             {pages.map(({ icon, name, path }) => (
-              <li key={name}>
+              <li key={name || path}>
                 <NavLink to={`/${layout}${path}`}>
                   {({ isActive }) => (
                     <Button
                       variant={isActive ? "gradient" : "text"}
                       color={
                         isActive
-                          ? sidenavColor
+                          ? (sidenavColor === "dark" ? "black" : sidenavColor) // Handle "dark" -> "black"
                           : sidenavType === "dark"
                             ? "white"
                             : "blue-gray"
@@ -91,7 +91,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
                         color="inherit"
                         className="font-medium capitalize"
                       >
-                        {name}
+                        {name || "Untitled"}
                       </Typography>
                     </Button>
                   )}

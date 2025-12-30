@@ -19,6 +19,23 @@ export const fetchAttendance = createAsyncThunk(
 );
 
 // ==========================
+// FETCH ALL ATTENDANCE (ADMIN)
+// ==========================
+export const fetchAllAttendance = createAsyncThunk(
+  "attendance/fetchAllAttendance",
+  async (_, thunkAPI) => {
+    try {
+      const { data } = await api.get("/admin/attendance"); // Admin Endpoint
+      return data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data || { message: "Failed to load all attendance" }
+      );
+    }
+  }
+);
+
+// ==========================
 // CHECK-IN
 // ==========================
 export const doCheckIn = createAsyncThunk(
@@ -34,6 +51,7 @@ export const doCheckIn = createAsyncThunk(
     }
   }
 );
+
 
 // ==========================
 // CHECK-OUT
@@ -81,6 +99,19 @@ const attendanceSlice = createSlice({
         state.attendanceList = action.payload;
       })
       .addCase(fetchAttendance.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message;
+      })
+
+      // FETCH ALL ATTENDANCE (ADMIN)
+      .addCase(fetchAllAttendance.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchAllAttendance.fulfilled, (state, action) => {
+        state.loading = false;
+        state.attendanceList = action.payload;
+      })
+      .addCase(fetchAllAttendance.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload?.message;
       })

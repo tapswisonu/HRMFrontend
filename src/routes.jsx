@@ -7,13 +7,17 @@ import {
   InformationCircleIcon,
   ServerStackIcon,
   RectangleStackIcon,
+
 } from "@heroicons/react/24/solid";
 
-import { Home, Profile, Tables, Notifications, Users } from "@/pages/dashboard";
 import { SignIn, SignUp } from "@/pages/auth";
 
+import { Home, Profile, Tables, Notifications, Users, Attendance } from "@/pages/dashboard";
+
 import CreateUser from "@/pages/createUser/createUser";
-import EmployeeDashboard from "@/pages/employee/employeeDashboard"
+import EmployeeDashboard from "@/pages/employee/employeeDashboard";
+
+
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -57,6 +61,13 @@ export const getRoutesByRole = (role) => {
       name: "Create User",
       path: "/create-user",
       element: <CreateUser />,
+    },
+
+    {
+      icon: <TableCellsIcon {...icon} />,
+      name: "Attendance",
+      path: "/attendance",
+      element: <Attendance />,
     },
   ];
 
@@ -105,8 +116,8 @@ export const getRoutesByRole = (role) => {
       layout: "auth",
       pages: [
         {
-          // icon: <ServerStackIcon {...icon} />,
-          // name: "Sign In",
+          icon: <ServerStackIcon {...icon} />,
+          name: "Sign In",
           path: "/sign-in",
           element: <SignIn />,
         },

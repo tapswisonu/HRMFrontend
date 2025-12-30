@@ -21,7 +21,7 @@ export default function CreateUser() {
     email: "",
     mobile: "",
     password: "",
-    role: "manager",
+    role: "employee",
   });
 
   const dispatch = useDispatch();
@@ -144,7 +144,6 @@ export default function CreateUser() {
                 value={form.role}
                 onChange={(value) => setForm((f) => ({ ...f, role: value }))}
               >
-                <Option value="manager">manager</Option>
                 <Option value="employee">employee</Option>
                 <Option value="admin">Admin</Option>
               </Select>
