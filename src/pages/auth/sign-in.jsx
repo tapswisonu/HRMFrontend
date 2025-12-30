@@ -58,7 +58,7 @@ export function SignIn() {
 
         {/* FORM START */}
         <form
-          className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2"
+          className="mt-8 mb-2 mx-auto w-full max-w-screen-lg lg:w-1/2 px-4"
           onSubmit={handleSubmit}
         >
           {/* Show redux error */}
