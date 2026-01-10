@@ -75,15 +75,9 @@ export function Sidenav({ brandImg, brandName, routes }) {
                 <NavLink to={`/${layout}${path}`}>
                   {({ isActive }) => (
                     <Button
-                      variant={isActive ? "gradient" : "text"}
-                      color={
-                        isActive
-                          ? (sidenavColor === "dark" ? "black" : sidenavColor) // Handle "dark" -> "black"
-                          : sidenavType === "dark"
-                            ? "white"
-                            : "blue-gray"
-                      }
-                      className="flex items-center gap-4 px-4 capitalize"
+                      variant={isActive ? "filled" : "text"}
+                      color="blue"
+                      className={`flex items-center gap-4 px-4 capitalize ${isActive ? "bg-brand-blue" : ""}`}
                       fullWidth
                     >
                       {icon}
@@ -116,7 +110,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
 }
 
 Sidenav.defaultProps = {
-  brandImg: "/img/logo-ct.png",
+  brandImg: "/img/logo.jpg",
   brandName: "HRM Frontend",
 };
 

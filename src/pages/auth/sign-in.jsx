@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { login } from "./../../features/auth/authSlice";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 import {
   Input,
@@ -16,6 +17,8 @@ export function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
+  const [passwordShown, setPasswordShown] = useState(false);
+  const togglePasswordVisiblity = () => setPasswordShown((cur) => !cur);
   const prevErrorRef = React.useRef(null);
   const dispatch = useDispatch();
   const { loading, error } = useSelector((s) => s.auth);
@@ -40,35 +43,32 @@ export function SignIn() {
 
     if (res.meta.requestStatus === "fulfilled") {
       toast.success("Login successful!");
-
-      // role-based redirection
-      // role-based redirection
       if (role === "admin") navigate("/dashboard/home");
       if (role === "employee") navigate("/dashboard/employeeDashboard");
     }
   };
 
   return (
-    <section className="m-8 flex gap-4">
-      <div className="w-full lg:w-3/5 mt-24">
-        <div className="text-center">
-          <Typography variant="h2" className="font-bold mb-4">Sign In</Typography>
-
+    <section className="min-h-screen grid place-items-center bg-brand-bg p-8">
+      <div className="w-full max-w-[600px] bg-brand-bg">
+        <img src="/img/auth-banner.jpg" alt="Banner" className="w-full rounded-xl mb-8 object-cover shadow-sm" />
+        <div className="text-center mb-10">
+          <img src="/img/logo.jpg" alt="Logo" className="h-12 mx-auto mb-4" />
+          <Typography variant="h3" className="font-bold text-brand-blue">
+            Sign In to your account
+          </Typography>
+          <Typography variant="paragraph" className="mt-2 font-normal text-blue-gray-500">
+            Welcome back! Please enter your details.
+          </Typography>
         </div>
 
-        {/* FORM START */}
-        <form
-          className="mt-8 mb-2 mx-auto w-full max-w-screen-lg lg:w-1/2 px-4"
-          onSubmit={handleSubmit}
-        >
+        <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
           {/* Show redux error */}
-          {error && (
-            toast.error({ error })
-          )}
+          {error && toast.error({ error })}
 
-          <div className="mb-1 flex flex-col gap-6">
-            {/* EMAIL */}
-            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+          {/* Email */}
+          <div className="flex flex-col gap-2">
+            <Typography variant="small" className="font-bold text-brand-blue">
               Email Address
             </Typography>
             <Input
@@ -76,56 +76,74 @@ export function SignIn() {
               placeholder="name@mail.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="!border-blue-gray-100 focus:!border-brand-teal bg-white"
+              labelProps={{
+                className: "before:content-none after:content-none",
+              }}
               required
             />
+          </div>
 
-            {/* PASSWORD */}
-            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
-              Password
-            </Typography>
+          {/* Password */}
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <Typography variant="small" className="font-bold text-brand-blue">
+                Password
+              </Typography>
+              <Typography
+                as="button"
+                type="button"
+                variant="small"
+                className="font-medium flex items-center gap-1 cursor-pointer text-brand-teal hover:text-brand-blue transition-colors"
+                onClick={togglePasswordVisiblity}
+              >
+                {passwordShown ? (
+                  <EyeIcon className="h-4 w-4" />
+                ) : (
+                  <EyeSlashIcon className="h-4 w-4" />
+                )}
+                {passwordShown ? "Hide" : "Show"}
+              </Typography>
+            </div>
             <Input
-              type="password"
+              type={passwordShown ? "text" : "password"}
               size="lg"
               placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className="!border-blue-gray-100 focus:!border-brand-teal bg-white"
+              labelProps={{
+                className: "before:content-none after:content-none",
+              }}
               required
             />
+          </div>
 
-            {/* ROLE SELECTION */}
-            <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+          {/* Role Selection */}
+          <div className="flex flex-col gap-2">
+            <Typography variant="small" className="font-bold text-brand-blue">
               Select Role
             </Typography>
-
             <Select
               label="Select role"
               value={role}
               onChange={(val) => setRole(val)}
+              className="!border-blue-gray-100 focus:!border-brand-teal bg-white"
+              labelProps={{
+                className: "before:content-none after:content-none",
+              }}
+              menuProps={{ className: "bg-white p-2" }}
             >
               <Option value="admin">Admin</Option>
               <Option value="employee">Employee</Option>
             </Select>
           </div>
 
-          <Button type="submit" className="mt-6" fullWidth disabled={loading}>
+          {/* Submit */}
+          <Button type="submit" className="mt-4 bg-brand-blue hover:shadow-lg shadow-md text-white normal-case text-base font-bold py-3" fullWidth disabled={loading}>
             {loading ? "Signing in..." : "Sign In"}
           </Button>
-
-          {/* <Typography variant="paragraph" className="text-center text-blue-gray-500 font-medium mt-4">
-            Not registered?
-            <Link to="/auth/sign-up" className="text-gray-900 ml-1">
-              Create account
-            </Link>
-          </Typography> */}
         </form>
-        {/* FORM END */}
-      </div>
-
-      <div className="w-2/5 h-full hidden lg:block">
-        <img
-          src="/img/pattern.png"
-          className="h-full w-full object-cover rounded-3xl"
-        />
       </div>
     </section>
   );
