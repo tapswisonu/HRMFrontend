@@ -3,16 +3,17 @@
 import {
   HomeIcon,
   UserCircleIcon,
-  TableCellsIcon,
-  InformationCircleIcon,
-  ServerStackIcon,
-  RectangleStackIcon,
-
+  UserGroupIcon,
+  UserPlusIcon,
+  ClockIcon,
+  ChartBarIcon,
+  CurrencyDollarIcon,
+  CalendarIcon,
 } from "@heroicons/react/24/solid";
 
 import { SignIn, SignUp } from "@/pages/auth";
 
-import { Home, Profile, Tables, Notifications, Users, Attendance } from "@/pages/dashboard";
+import { Home, Profile, Tables, Notifications, Users, Salary, CalendarPage, Attendance } from "@/pages/dashboard";
 
 import CreateUser from "@/pages/createUser/createUser";
 import EmployeeDashboard from "@/pages/employee/employeeDashboard";
@@ -51,23 +52,35 @@ export const getRoutesByRole = (role) => {
   // ⭐ ADMIN ONLY ROUTES
   const adminRoutes = [
     {
-      icon: <TableCellsIcon {...icon} />,
+      icon: <UserGroupIcon {...icon} />,
       name: "Users",
       path: "/users",
       element: <Users />,
     },
     {
-      icon: <TableCellsIcon {...icon} />,
+      icon: <UserPlusIcon {...icon} />,
       name: "Create User",
       path: "/create-user",
       element: <CreateUser />,
     },
 
     {
-      icon: <TableCellsIcon {...icon} />,
+      icon: <ClockIcon {...icon} />,
       name: "Attendance",
       path: "/attendance",
       element: <Attendance />,
+    },
+    {
+      icon: <CurrencyDollarIcon {...icon} />,
+      name: "Salary",
+      path: "/salary",
+      element: <Salary />,
+    },
+    {
+      icon: <CalendarIcon {...icon} />,
+      name: "Calendar",
+      path: "/calendar",
+      element: <CalendarPage />,
     },
   ];
 
@@ -79,10 +92,16 @@ export const getRoutesByRole = (role) => {
   // ⭐ employee ONLY ROUTES
   const employeeRoutes = [
     {
-      icon: <TableCellsIcon {...icon} />,
+      icon: <ChartBarIcon {...icon} />,
       name: "employeeDashboard",
       path: "/employeeDashboard",
       element: <EmployeeDashboard />,
+    },
+    {
+      icon: <CalendarIcon {...icon} />,
+      name: "Calendar",
+      path: "/calendar",
+      element: <CalendarPage />,
     },
   ];
 
@@ -95,7 +114,7 @@ export const getRoutesByRole = (role) => {
   // Example: allow managers to see user list but not create user
   if (role === "manager") {
     baseRoutes.push({
-      icon: <TableCellsIcon {...icon} />,
+      icon: <UserGroupIcon {...icon} />,
       name: "Users",
       path: "/users",
       element: <Users />,
@@ -116,7 +135,7 @@ export const getRoutesByRole = (role) => {
       layout: "auth",
       pages: [
         {
-          icon: <ServerStackIcon {...icon} />,
+          icon: <UserCircleIcon {...icon} />,
           name: "Sign In",
           path: "/sign-in",
           element: <SignIn />,

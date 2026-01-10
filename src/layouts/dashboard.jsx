@@ -28,9 +28,9 @@ export function Dashboard() {
   return (
     <div className="min-h-screen bg-blue-gray-50/50">
 
-      {/* ⭐ Sidebar receives dynamic routes */}
+      {/* ⭐ Sidebar receives dynamic routes - FILTERED to only show dashboard layout */}
       <Sidenav
-        routes={routes}
+        routes={routes.filter(r => r.layout === "dashboard")}
         brandImg={
           sidenavType === "dark" ? "/img/logo-ct.png" : "/img/logo-ct-dark.png"
         }
