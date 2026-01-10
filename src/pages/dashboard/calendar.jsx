@@ -121,52 +121,81 @@ export function CalendarPage() {
                     )}
                 </CardHeader>
                 <CardBody className="flex flex-col lg:flex-row gap-8 p-4">
-                    <div className="flex-1">
-                        <div className="flex gap-4 mb-4 justify-center text-xs">
-                            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-green-500 rounded-full"></div> Present</div>
-                            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-red-500 rounded-full"></div> Absent</div>
-                            <div className="flex items-center gap-1"><div className="w-3 h-3 bg-blue-500 rounded-full"></div> Event</div>
+                    <div className="flex-1 flex flex-col gap-4">
+                        {/* Legend */}
+                        <div className="flex gap-6 justify-center bg-gray-50 p-2 rounded-lg border border-gray-200">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
+                                <div className="w-3 h-3 bg-green-500 rounded-full shadow-sm"></div> Present
+                            </div>
+                            <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
+                                <div className="w-3 h-3 bg-red-500 rounded-full shadow-sm"></div> Absent
+                            </div>
+                            <div className="flex items-center gap-2 text-xs font-semibold text-gray-700">
+                                <div className="w-3 h-3 bg-blue-500 rounded-full shadow-sm"></div> Event
+                            </div>
                         </div>
+
                         <Calendar
                             onChange={setDate}
                             value={date}
-                            className="w-full border-none shadow-sm rounded-lg p-2"
+                            className="w-full border-none shadow-md rounded-xl p-4 font-sans"
                             tileContent={tileContent}
+                            tileClassName="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                         />
                     </div>
-                    <div className="flex-1">
-                        <Typography variant="h5" color="blue-gray" className="mb-4">
-                            Details for {format(date, "MMMM do, yyyy")}
-                        </Typography>
 
-                        {/* Attendance Status for Selected Day */}
-                        <div className="mb-6 p-4 border border-blue-gray-50 rounded-lg bg-gray-50">
-                            <Typography variant="small" className="font-bold text-gray-600 uppercase mb-2">Attendance Status</Typography>
-                            {(() => {
-                                const isDayPresent = attendance.find(att => isSameDay(new Date(att.date), date));
-                                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                                const isFuture = date > new Date();
-
-                                if (isDayPresent) return <Chip color="green" value={`Present (In: ${format(new Date(isDayPresent.checkInTime), 'HH:mm')})`} />;
-                                if (isWeekend) return <Typography className="italic text-gray-500">Weekend</Typography>;
-                                if (isFuture) return <Typography className="italic text-gray-500">Future Date</Typography>;
-
-                                return <Chip color="red" value="Absent" />;
-                            })()}
+                    <div className="flex-1 flex flex-col gap-6">
+                        <div>
+                            <Typography variant="h5" color="blue-gray" className="mb-1 font-bold">
+                                {format(date, "MMMM do, yyyy")}
+                            </Typography>
+                            <Typography variant="small" className="text-gray-500 font-normal">
+                                Daily Overview
+                            </Typography>
                         </div>
 
-                        <Typography variant="small" className="font-bold text-gray-600 uppercase mb-2">Events</Typography>
-                        <div className="flex flex-col gap-4">
-                            {appointments.filter(app => isSameDay(new Date(app.date), date)).length === 0 ? (
-                                <Typography color="gray" className="italic">No appointments for this day.</Typography>
-                            ) : (
-                                appointments.filter(app => isSameDay(new Date(app.date), date)).map(app => (
-                                    <div key={app._id} className="p-4 border border-blue-gray-100 rounded-lg shadow-sm bg-white">
-                                        <Typography variant="h6" color="blue">{app.title}</Typography>
-                                        <Typography className="text-sm text-gray-600">{app.description}</Typography>
+                        {/* Attendance Status Card */}
+                        <Card className="border border-blue-gray-100 shadow-sm">
+                            <CardBody className="p-4 flex items-center justify-between">
+                                <div>
+                                    <Typography variant="small" className="font-bold text-blue-gray-500 uppercase mb-1">
+                                        Attendance Status
+                                    </Typography>
+                                    {(() => {
+                                        const isDayPresent = attendance.find(att => isSameDay(new Date(att.date), date));
+                                        const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                                        const isFuture = date > new Date();
+
+                                        if (isDayPresent) return <Typography color="green" className="font-bold flex items-center gap-2">● Present <span className="text-gray-400 text-sm font-normal">(In: {format(new Date(isDayPresent.checkInTime), 'HH:mm')})</span></Typography>;
+                                        if (isWeekend) return <Typography className="italic text-gray-400 font-medium">Weekend</Typography>;
+                                        if (isFuture) return <Typography className="italic text-gray-400 font-medium">Future Date</Typography>;
+
+                                        return <Typography color="red" className="font-bold flex items-center gap-2">● Absent</Typography>;
+                                    })()}
+                                </div>
+                            </CardBody>
+                        </Card>
+
+                        <div>
+                            <Typography variant="h6" color="blue-gray" className="mb-3">
+                                Scheduled Events
+                            </Typography>
+                            <div className="flex flex-col gap-3 h-64 overflow-y-auto pr-2">
+                                {appointments.filter(app => isSameDay(new Date(app.date), date)).length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-center border-2 border-dashed border-gray-200 rounded-lg p-6">
+                                        <Typography color="gray" className="font-medium text-gray-400">No events scheduled</Typography>
+                                        <Typography variant="small" className="text-gray-300 mt-1">Enjoy your free time!</Typography>
                                     </div>
-                                ))
-                            )}
+                                ) : (
+                                    appointments.filter(app => isSameDay(new Date(app.date), date)).map(app => (
+                                        <div key={app._id} className="p-4 border-l-4 border-blue-500 bg-blue-50/50 rounded-r-lg shadow-sm hover:shadow-md transition-shadow">
+                                            <Typography variant="h6" color="blue-gray" className="leading-tight">{app.title}</Typography>
+                                            <Typography className="text-xs text-gray-600 mt-1 font-medium">{format(new Date(app.date), 'p')}</Typography>
+                                            <Typography className="text-sm text-gray-600 mt-2">{app.description}</Typography>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
                         </div>
                     </div>
                 </CardBody>
