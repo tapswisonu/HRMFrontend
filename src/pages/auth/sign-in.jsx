@@ -49,101 +49,115 @@ export function SignIn() {
   };
 
   return (
-    <section className="min-h-screen grid place-items-center bg-brand-bg p-8">
-      <div className="w-full max-w-[600px] bg-brand-bg">
-        <img src="/img/auth-banner.jpg" alt="Banner" className="w-full rounded-xl mb-8 object-cover shadow-sm" />
-        <div className="text-center mb-10">
-          <img src="/img/logo.jpg" alt="Logo" className="h-12 mx-auto mb-4" />
-          <Typography variant="h3" className="font-bold text-brand-blue">
-            Sign In to your account
-          </Typography>
-          <Typography variant="paragraph" className="mt-2 font-normal text-blue-gray-500">
-            Welcome back! Please enter your details.
-          </Typography>
+    <section className="min-h-screen flex items-center justify-center bg-brand-bg p-4">
+      <div className="flex flex-col lg:flex-row w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden min-h-[600px]">
+
+        {/* Left Side - Form */}
+        <div className="w-full lg:w-1/2 p-8 lg:p-16 flex flex-col justify-center">
+          <div className="text-center lg:text-left mb-10">
+            <img src="/img/logo.jpg" alt="Logo" className="h-12 mx-auto lg:mx-0 mb-4" />
+            <Typography variant="h3" className="font-bold text-brand-blue">
+              Sign In
+            </Typography>
+            <Typography variant="paragraph" className="mt-2 font-normal text-blue-gray-500">
+              Welcome back! Please enter your details.
+            </Typography>
+          </div>
+
+          <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
+            {/* Show redux error */}
+            {error && toast.error(error)}
+
+            {/* Email */}
+            <div className="flex flex-col gap-2">
+              <Typography variant="small" className="font-bold text-brand-blue">
+                Email Address
+              </Typography>
+              <Input
+                size="lg"
+                placeholder="name@mail.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="!border-blue-gray-100 focus:!border-brand-teal bg-white"
+                labelProps={{
+                  className: "before:content-none after:content-none",
+                }}
+                required
+              />
+            </div>
+
+            {/* Password */}
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between items-center">
+                <Typography variant="small" className="font-bold text-brand-blue">
+                  Password
+                </Typography>
+                <Typography
+                  as="button"
+                  type="button"
+                  variant="small"
+                  className="font-medium flex items-center gap-1 cursor-pointer text-brand-teal hover:text-brand-blue transition-colors"
+                  onClick={togglePasswordVisiblity}
+                >
+                  {passwordShown ? (
+                    <EyeIcon className="h-4 w-4" />
+                  ) : (
+                    <EyeSlashIcon className="h-4 w-4" />
+                  )}
+                  {passwordShown ? "Hide" : "Show"}
+                </Typography>
+              </div>
+              <Input
+                type={passwordShown ? "text" : "password"}
+                size="lg"
+                placeholder="********"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="!border-blue-gray-100 focus:!border-brand-teal bg-white"
+                labelProps={{
+                  className: "before:content-none after:content-none",
+                }}
+                required
+              />
+            </div>
+
+            {/* Role Selection */}
+            <div className="flex flex-col gap-2">
+              <Typography variant="small" className="font-bold text-brand-blue">
+                Select Role
+              </Typography>
+              <Select
+                label="Select role"
+                value={role}
+                onChange={(val) => setRole(val)}
+                className="!border-blue-gray-100 focus:!border-brand-teal bg-white"
+                labelProps={{
+                  className: "before:content-none after:content-none",
+                }}
+                menuProps={{ className: "bg-white p-2" }}
+              >
+                <Option value="admin">Admin</Option>
+                <Option value="employee">Employee</Option>
+              </Select>
+            </div>
+
+            {/* Submit */}
+            <Button type="submit" className="mt-4 bg-brand-blue hover:shadow-lg shadow-md text-white normal-case text-base font-bold py-3" fullWidth disabled={loading}>
+              {loading ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
         </div>
 
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-          {/* Show redux error */}
-          {error && toast.error({ error })}
+        {/* Right Side - Banner Image */}
+        <div className="hidden lg:block lg:w-1/2 relative">
+          <img
+            src="/img/auth-banner.jpg"
+            alt="Banner"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-blue-900/20 mix-blend-multiply"></div>
+        </div>
 
-          {/* Email */}
-          <div className="flex flex-col gap-2">
-            <Typography variant="small" className="font-bold text-brand-blue">
-              Email Address
-            </Typography>
-            <Input
-              size="lg"
-              placeholder="name@mail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="!border-blue-gray-100 focus:!border-brand-teal bg-white"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
-              required
-            />
-          </div>
-
-          {/* Password */}
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-center">
-              <Typography variant="small" className="font-bold text-brand-blue">
-                Password
-              </Typography>
-              <Typography
-                as="button"
-                type="button"
-                variant="small"
-                className="font-medium flex items-center gap-1 cursor-pointer text-brand-teal hover:text-brand-blue transition-colors"
-                onClick={togglePasswordVisiblity}
-              >
-                {passwordShown ? (
-                  <EyeIcon className="h-4 w-4" />
-                ) : (
-                  <EyeSlashIcon className="h-4 w-4" />
-                )}
-                {passwordShown ? "Hide" : "Show"}
-              </Typography>
-            </div>
-            <Input
-              type={passwordShown ? "text" : "password"}
-              size="lg"
-              placeholder="********"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="!border-blue-gray-100 focus:!border-brand-teal bg-white"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
-              required
-            />
-          </div>
-
-          {/* Role Selection */}
-          <div className="flex flex-col gap-2">
-            <Typography variant="small" className="font-bold text-brand-blue">
-              Select Role
-            </Typography>
-            <Select
-              label="Select role"
-              value={role}
-              onChange={(val) => setRole(val)}
-              className="!border-blue-gray-100 focus:!border-brand-teal bg-white"
-              labelProps={{
-                className: "before:content-none after:content-none",
-              }}
-              menuProps={{ className: "bg-white p-2" }}
-            >
-              <Option value="admin">Admin</Option>
-              <Option value="employee">Employee</Option>
-            </Select>
-          </div>
-
-          {/* Submit */}
-          <Button type="submit" className="mt-4 bg-brand-blue hover:shadow-lg shadow-md text-white normal-case text-base font-bold py-3" fullWidth disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
-          </Button>
-        </form>
       </div>
     </section>
   );

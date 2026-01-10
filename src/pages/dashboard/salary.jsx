@@ -20,7 +20,7 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
-import { format, getDaysInMonth, isSameDay } from "date-fns";
+import { format, getDaysInMonth, isSameDay, eachDayOfInterval, startOfMonth, endOfMonth, isWeekend } from "date-fns";
 
 export function Salary() {
     const [employees, setEmployees] = useState([]);
@@ -75,13 +75,19 @@ export function Salary() {
 
     const handleSaveSalary = async (id, salaryToSave = newSalary) => {
         try {
+            if (!id) {
+                toast.error("Invalid Employee ID");
+                return;
+            }
+            console.log("Saving Salary for ID:", id); // Debug Log
+
             const config = {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             };
 
-            await axios.put(`http://localhost:8000/api/admin/user/${id}`, { salary: salaryToSave }, config);
+            await axios.put(`http://localhost:8000/api/admin/user/${id}`, { salary: Number(salaryToSave) }, config);
 
             toast.success("Salary updated successfully");
             setEditingId(null);
@@ -89,7 +95,12 @@ export function Salary() {
             fetchEmployees(); // Refresh list
         } catch (error) {
             console.error(error);
-            toast.error("Failed to update salary");
+            const msg = error.response?.data?.message || error.message || "Failed to update salary";
+            toast.error(msg);
+            // If 404, it means the user ID might be stale (e.g. after re-seed). Refresh the list.
+            if (error.response && error.response.status === 404) {
+                fetchEmployees();
+            }
         }
     };
 
@@ -102,6 +113,15 @@ export function Salary() {
         await fetchMonthlyAttendance(emp._id, now.getMonth(), now.getFullYear(), emp.salary);
     };
 
+    const [breakdown, setBreakdown] = useState({
+        baseSalary: 0,
+        daysInMonth: 30,
+        weekends: 0,
+        presentDays: 0,
+        paidDays: 0,
+        finalSalary: 0
+    });
+
     const fetchMonthlyAttendance = async (empId, month, year, baseSalary) => {
         try {
             const config = {
@@ -109,23 +129,49 @@ export function Salary() {
                 params: { month, year } // month is 0-indexed for backend now
             };
             const { data } = await axios.get(`http://localhost:8000/api/admin/attendance/${empId}`, config);
-            setAttendanceData(data); // Array of attendance records
+            setAttendanceData(data);
 
-            // Calculate Logic
-            const presentCount = data.length; // Simple count of records
-            setPresentDays(presentCount);
+            // --- Robust Calculation Logic ---
+            const date = new Date(year, month);
+            const daysInMonth = getDaysInMonth(date);
+            const allDays = eachDayOfInterval({
+                start: startOfMonth(date),
+                end: endOfMonth(date)
+            });
 
-            // Simple Calc: (Base Salary / Total Days in Month) * Present Days
-            // OR (Base Salary / 30) * Present Days as per standard
-            // Let's use days in month for accuracy
-            const daysInMonth = getDaysInMonth(new Date(year, month));
-            setWorkingDays(daysInMonth);
+            let presentCount = 0;
+            let weekendCount = 0;
+            let paidCount = 0;
 
-            // Use the baseSalary passed to the function, or selectedEmp's salary if available
-            const currentBaseSalary = baseSalary || selectedEmp?.salary || 0;
+            allDays.forEach(day => {
+                const isPresent = data.find(att => isSameDay(new Date(att.date), day));
+                const isWknd = isWeekend(day);
+
+                if (isPresent) {
+                    presentCount++;
+                    paidCount++;
+                } else if (isWknd) {
+                    weekendCount++;
+                    paidCount++;
+                }
+            });
+
             // Avoid division by zero
-            const calc = currentBaseSalary > 0 && daysInMonth > 0 ? (currentBaseSalary / daysInMonth) * presentCount : 0;
-            setCalculatedSalary(calc.toFixed(2));
+            const currentBaseSalary = Number(baseSalary || selectedEmp?.salary || 0);
+            const finalSalary = daysInMonth > 0 ? (currentBaseSalary / daysInMonth) * paidCount : 0;
+
+            setPresentDays(presentCount);
+            setWorkingDays(daysInMonth);
+            setCalculatedSalary(finalSalary.toFixed(2));
+
+            setBreakdown({
+                baseSalary: currentBaseSalary,
+                daysInMonth,
+                weekends: weekendCount,
+                presentDays: presentCount,
+                paidDays: paidCount,
+                finalSalary: finalSalary.toFixed(2)
+            });
 
         } catch (error) {
             console.error(error);
@@ -225,7 +271,7 @@ export function Salary() {
                                                     </div>
                                                 ) : (
                                                     <Typography className="text-xs font-semibold text-blue-gray-600">
-                                                        ${salary || 0}
+                                                        ₹{salary || 0}
                                                     </Typography>
                                                 )}
 
@@ -280,13 +326,39 @@ export function Salary() {
                         tileClassName={tileClassName}
                         className="w-full border-none shadow-sm rounded-lg"
                     />
-                    <div className="w-full text-center">
-                        <Typography variant="small" color="gray" className="mb-1">
-                            Month: {format(currentMonth, 'MMMM yyyy')} | Working Days: {workingDays}
+                    <div className="w-full">
+                        <Typography variant="h6" color="blue-gray" className="mb-2 text-center">
+                            Salary Breakdown ({format(currentMonth, 'MMMM yyyy')})
                         </Typography>
-                        <div className="flex justify-center gap-4 mb-2">
-                            <Chip color="green" value={`Present: ${presentDays}`} />
-                            <Chip color="blue" value={`Salary: $${calculatedSalary}`} />
+
+                        <div className="grid grid-cols-2 gap-4 text-sm border p-4 rounded-lg bg-gray-50">
+                            <div className="flex justify-between border-b pb-2">
+                                <span className="text-gray-600">Base Salary:</span>
+                                <span className="font-bold">₹{breakdown?.baseSalary}</span>
+                            </div>
+                            <div className="flex justify-between border-b pb-2">
+                                <span className="text-gray-600">Days in Month:</span>
+                                <span className="font-bold">{breakdown?.daysInMonth}</span>
+                            </div>
+
+                            <div className="flex justify-between border-b pb-2">
+                                <span className="text-green-600">Present Days:</span>
+                                <span className="font-bold">{breakdown?.presentDays}</span>
+                            </div>
+                            <div className="flex justify-between border-b pb-2">
+                                <span className="text-blue-600">Weekends (Off):</span>
+                                <span className="font-bold">{breakdown?.weekends}</span>
+                            </div>
+
+                            <div className="flex justify-between pt-2 col-span-2">
+                                <span className="text-gray-800 font-bold">Total Paid Days:</span>
+                                <span className="font-bold text-gray-900">{breakdown?.paidDays} / {breakdown?.daysInMonth}</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 p-4 bg-blue-50 rounded-lg text-center border border-blue-100">
+                            <Typography variant="small" className="text-blue-800 font-medium">calculated Payout</Typography>
+                            <Typography variant="h4" color="blue">₹{breakdown?.finalSalary}</Typography>
                         </div>
                     </div>
                 </DialogBody>

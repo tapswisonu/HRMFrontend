@@ -23,59 +23,149 @@ import {
   statisticsCardsData,
   statisticsChartsData,
   projectsTableData,
-  ordersOverviewData,
 } from "@/data";
-import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/solid";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchUsersByRole } from "@/features/users/userSlice";
+import { CheckCircleIcon, ClockIcon, UserPlusIcon, UsersIcon, ChartBarIcon, BanknotesIcon, BellIcon } from "@heroicons/react/24/solid";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import { format } from "date-fns";
+import { chartsConfig } from "@/configs";
 
 export function Home() {
-  const dispatch = useDispatch();
-  // const { list } = useSelector((state) => state.users);
-
-  // We need to fetch both employees and admins to get accurate counts.
-  // Since our state currently holds just one list, we might need to fetch them separately
-  // or just rely on what's available. For a robust dashboard, we often need a "dashboard stats" endpoint.
-  // However, given the constraints, we will try to fetch 'employee' and 'admin' lists if possible,
-  // or we can enhance the backend to return counts.
-  // For now, let's fetch 'employee' by default to show at least those counts, or trigger parallel fetches if we can manage state.
-  // A cleaner way for the frontend without specific dashboard endpoint:
-  // We can't easily store multiple lists in the current simple userSlice 'list'.
-  // We will assume 'list' might contain mixed data if we modified the slice, but we didn't.
-  // So, let's just fetch 'employee' for now to populate the "Total Employees" card.
-
-  const [empCount, setEmpCount] = React.useState(0);
-  const [adminCount, setAdminCount] = React.useState(0);
+  const { token } = useSelector((state) => state.auth);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Crude way to get counts without dedicated endpoint:
-    // 1. Fetch employees
-    dispatch(fetchUsersByRole("employee")).then((res) => {
-      if (res.payload) setEmpCount(res.payload.length || 0);
-    });
-    // 2. Fetch admins
-    dispatch(fetchUsersByRole("admin")).then((res) => {
-      if (res.payload) setAdminCount(res.payload.length || 0);
-    });
-  }, [dispatch]);
+    const fetchStats = async () => {
+      try {
+        const config = { headers: { Authorization: `Bearer ${token}` } };
+        const { data } = await axios.get("http://localhost:8000/api/admin/dashboard-stats", config);
+        setStats(data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats", error);
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, [token]);
 
-  // Update the data object dynamically
-  // Note: structuredClone is modern, or we can just map.
-  const dynamicCardsData = statisticsCardsData.map((card) => {
-    if (card.title === "Total Employees") {
-      return { ...card, value: empCount.toString() };
-    }
-    if (card.title === "Total Admins") {
-      return { ...card, value: adminCount.toString() };
-    }
-    return card;
-  });
+  // --- Dynamic Data Preparation ---
 
+  // 1. Cards
+  const cardsData = [
+    {
+      color: "gray",
+      icon: UsersIcon,
+      title: "Total Employees",
+      value: stats?.cards?.totalEmployees || 0,
+      footer: {
+        color: "text-green-500",
+        value: "",
+        label: "Registered Staff",
+      },
+    },
+    {
+      color: "gray",
+      icon: UserPlusIcon,
+      title: "Total Admins",
+      value: stats?.cards?.totalAdmins || 0,
+      footer: {
+        color: "text-blue-500",
+        value: "",
+        label: "System Admins",
+      },
+    },
+    {
+      color: "gray",
+      icon: ChartBarIcon,
+      title: "Today's Presence",
+      value: stats?.cards?.presenceToday || 0,
+      footer: {
+        color: "text-green-500",
+        value: "Active",
+        label: "Checked-in Today",
+      },
+    },
+    {
+      color: "gray",
+      icon: BanknotesIcon,
+      title: "Active Projects",
+      value: "8", // Still static as requested (or from backend if available)
+      footer: {
+        color: "text-green-500",
+        value: "+1",
+        label: "new this week",
+      },
+    },
+  ];
+
+  // 2. Charts
+  const attendanceChart = {
+    type: "bar",
+    height: 220,
+    series: [{
+      name: "Check-ins",
+      data: stats?.charts?.attendanceTrends?.map(d => d.count) || [],
+    }],
+    options: {
+      ...chartsConfig,
+      colors: "#388e3c",
+      plotOptions: {
+        bar: {
+          columnWidth: "16%",
+          borderRadius: 5,
+        },
+      },
+      xaxis: {
+        ...chartsConfig.xaxis,
+        categories: stats?.charts?.attendanceTrends?.map(d => d.day) || [],
+      },
+    },
+  };
+
+  const joinersChart = {
+    type: "line",
+    height: 220,
+    series: [{
+      name: "New Joiners",
+      data: stats?.charts?.newJoiners?.map(d => d.count) || [],
+    }],
+    options: {
+      ...chartsConfig,
+      colors: ["#0288d1"],
+      stroke: { lineCap: "round" },
+      markers: { size: 5 },
+      xaxis: {
+        ...chartsConfig.xaxis,
+        categories: stats?.charts?.newJoiners?.map(d => d.month) || [],
+      },
+    },
+  };
+
+  const chartsData = [
+    {
+      color: "white",
+      title: "Attendance Trends",
+      description: "Daily Check-ins (Last 7 Days)",
+      footer: "updated just now",
+      chart: attendanceChart,
+    },
+    {
+      color: "white",
+      title: "New Joiners",
+      description: "Monthly Recruitments",
+      footer: "updated just now",
+      chart: joinersChart,
+    },
+  ];
+
+  if (loading) return <div className="p-4">Loading Dashboard...</div>;
 
   return (
     <div className="mt-12">
       <div className="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
-        {dynamicCardsData.map(({ icon, title, footer, ...rest }) => (
+        {cardsData.map(({ icon, title, footer, ...rest }) => (
           <StatisticsCard
             key={title}
             {...rest}
@@ -92,8 +182,9 @@ export function Home() {
           />
         ))}
       </div>
+
       <div className="mb-6 grid grid-cols-1 gap-y-12 gap-x-6 md:grid-cols-2 xl:grid-cols-3">
-        {statisticsChartsData.map((props) => (
+        {chartsData.map((props) => (
           <StatisticsChart
             key={props.title}
             {...props}
@@ -109,7 +200,9 @@ export function Home() {
           />
         ))}
       </div>
+
       <div className="mb-4 grid grid-cols-1 gap-6 xl:grid-cols-3">
+        {/* Projects Table (Keeping Static for now as per minimal changes, or can remove if desired) */}
         <Card className="overflow-hidden xl:col-span-2 border border-blue-gray-100 shadow-sm">
           <CardHeader
             floated={false}
@@ -129,22 +222,7 @@ export function Home() {
                 <strong>30 done</strong> this month
               </Typography>
             </div>
-            <Menu placement="left-start">
-              <MenuHandler>
-                <IconButton size="sm" variant="text" color="blue-gray">
-                  <EllipsisVerticalIcon
-                    strokeWidth={3}
-                    fill="currenColor"
-                    className="h-6 w-6"
-                  />
-                </IconButton>
-              </MenuHandler>
-              <MenuList>
-                <MenuItem>Action</MenuItem>
-                <MenuItem>Another Action</MenuItem>
-                <MenuItem>Something else here</MenuItem>
-              </MenuList>
-            </Menu>
+            {/* Menu removed for simplicity */}
           </CardHeader>
           <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
             <table className="w-full min-w-[640px] table-auto">
@@ -235,6 +313,8 @@ export function Home() {
             </table>
           </CardBody>
         </Card>
+
+        {/* Recent Activity (Dynamic Replacement for Orders) */}
         <Card className="border border-blue-gray-100 shadow-sm">
           <CardHeader
             floated={false}
@@ -243,7 +323,7 @@ export function Home() {
             className="m-0 p-6"
           >
             <Typography variant="h6" color="blue-gray" className="mb-2">
-              Orders Overview
+              Recent Activity
             </Typography>
             <Typography
               variant="small"
@@ -253,22 +333,18 @@ export function Home() {
                 strokeWidth={3}
                 className="h-3.5 w-3.5 text-green-500"
               />
-              <strong>24%</strong> this month
+              <strong>Latest</strong> Check-ins
             </Typography>
           </CardHeader>
           <CardBody className="pt-0">
-            {ordersOverviewData.map(
-              ({ icon, color, title, description }, key) => (
-                <div key={title} className="flex items-start gap-4 py-3">
+            {stats?.recentActivity?.length > 0 ? (
+              stats.recentActivity.map((activity, key) => (
+                <div key={key} className="flex items-start gap-4 py-3">
                   <div
-                    className={`relative p-1 after:absolute after:-bottom-6 after:left-2/4 after:w-0.5 after:-translate-x-2/4 after:bg-blue-gray-50 after:content-[''] ${key === ordersOverviewData.length - 1
-                      ? "after:h-0"
-                      : "after:h-4/6"
+                    className={`relative p-1 after:absolute after:-bottom-6 after:left-2/4 after:w-0.5 after:-translate-x-2/4 after:bg-blue-gray-50 after:content-[''] ${key === stats.recentActivity.length - 1 ? "after:h-0" : "after:h-4/6"
                       }`}
                   >
-                    {React.createElement(icon, {
-                      className: `!w-5 !h-5 ${color}`,
-                    })}
+                    <BellIcon className="!w-5 !h-5 text-blue-gray-300" />
                   </div>
                   <div>
                     <Typography
@@ -276,18 +352,20 @@ export function Home() {
                       color="blue-gray"
                       className="block font-medium"
                     >
-                      {title}
+                      {activity.employee?.name || "Unknown User"} Checked In
                     </Typography>
                     <Typography
                       as="span"
                       variant="small"
                       className="text-xs font-medium text-blue-gray-500"
                     >
-                      {description}
+                      {format(new Date(activity.checkInTime), "dd MMM, hh:mm a")}
                     </Typography>
                   </div>
                 </div>
-              )
+              ))
+            ) : (
+              <div className="p-4 text-center text-sm text-gray-500">No recent activity.</div>
             )}
           </CardBody>
         </Card>
