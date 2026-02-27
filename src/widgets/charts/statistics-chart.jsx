@@ -1,64 +1,37 @@
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  CardFooter,
-  Typography,
-} from "@material-tailwind/react";
 import PropTypes from "prop-types";
 import Chart from "react-apexcharts";
 
 export function StatisticsChart({ color, chart, title, description, footer }) {
   return (
-    <Card className="border border-blue-gray-100 shadow-sm">
-      <CardHeader variant="gradient" color={color} floated={false} shadow={false}>
+    <div className="flex flex-col bg-white rounded-2xl border border-blue-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+      {/* Title block — sits ABOVE the chart */}
+      <div className="px-6 pt-5 pb-3 border-b border-blue-gray-50">
+        <p className="text-sm font-bold text-blue-gray-800">{title}</p>
+        <p className="text-xs text-blue-gray-400 mt-0.5 font-normal">{description}</p>
+      </div>
+
+      {/* Chart */}
+      <div className="px-2 pt-2">
         <Chart {...chart} />
-      </CardHeader>
-      <CardBody className="px-6 pt-0">
-        <Typography variant="h6" color="blue-gray">
-          {title}
-        </Typography>
-        <Typography variant="small" className="font-normal text-blue-gray-600">
-          {description}
-        </Typography>
-      </CardBody>
+      </div>
+
+      {/* Footer */}
       {footer && (
-        <CardFooter className="border-t border-blue-gray-50 px-6 py-5">
+        <div className="border-t border-blue-gray-50 px-6 py-3">
           {footer}
-        </CardFooter>
+        </div>
       )}
-    </Card>
+    </div>
   );
 }
 
 StatisticsChart.defaultProps = {
-  color: "blue",
+  color: "white",
   footer: null,
 };
 
 StatisticsChart.propTypes = {
-  color: PropTypes.oneOf([
-    "white",
-    "blue-gray",
-    "gray",
-    "brown",
-    "deep-orange",
-    "orange",
-    "amber",
-    "yellow",
-    "lime",
-    "light-green",
-    "green",
-    "teal",
-    "cyan",
-    "light-blue",
-    "blue",
-    "indigo",
-    "deep-purple",
-    "purple",
-    "pink",
-    "red",
-  ]),
+  color: PropTypes.string,
   chart: PropTypes.object.isRequired,
   title: PropTypes.node.isRequired,
   description: PropTypes.node.isRequired,
