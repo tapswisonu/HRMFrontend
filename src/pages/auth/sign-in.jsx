@@ -280,7 +280,6 @@ export function SignIn() {
               <StatPill icon={BanknotesIcon} value="₹0" label="Setup cost" />
             </div>
           </div>
-
          
 
         </div>
