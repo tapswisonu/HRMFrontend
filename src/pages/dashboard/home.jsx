@@ -77,7 +77,7 @@ export function Home() {
       try {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const { data } = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL}/admin/dashboard-stats`,
+          `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"}/admin/dashboard-stats`,
           config
         );
         setStats(data);
