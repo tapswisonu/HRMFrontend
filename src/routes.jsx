@@ -1,5 +1,3 @@
-
-
 import {
   HomeIcon,
   UserCircleIcon,
@@ -9,14 +7,21 @@ import {
   ChartBarIcon,
   CurrencyDollarIcon,
   CalendarIcon,
+  CalculatorIcon,
+  ShieldCheckIcon,
+  DocumentCheckIcon,
 } from "@heroicons/react/24/solid";
 
 import { SignIn, SignUp } from "@/pages/auth";
 
-import { Home, Profile, Tables, Notifications, Users, Salary, CalendarPage, Attendance } from "@/pages/dashboard";
+import { Home, Profile, Tables, Notifications, Users, Salary, CalendarPage, Attendance, AttendanceSalary, AttendanceRequests, HolidayRequests } from "@/pages/dashboard";
 
 import CreateUser from "@/pages/createUser/createUser";
 import EmployeeDashboard from "@/pages/employee/employeeDashboard";
+import TrackingSettings from "@/pages/dashboard/trackingSettings";
+import SalaryReport from "@/pages/dashboard/salaryReport";
+import PayrollManagement from "@/pages/dashboard/payrollManagement";
+import AttendanceManagement from "@/pages/dashboard/attendanceManagement";
 
 
 
@@ -28,128 +33,161 @@ const icon = {
 // ⭐ GET ROUTES BASED ON USER ROLE
 // =====================================================
 export const getRoutesByRole = (role) => {
-  // ROUTES visible for ALL (admin + manager + employee)
-  const baseRoutes = [
-    {
-      icon: <UserCircleIcon {...icon} />,
-      name: "Profile",
-      path: "/profile",
-      element: <Profile />,
-    },
+  const routes = [];
 
-  ];
-
-  // ⭐ DASHBOARD (HOME) - visible for Admin & Manager ONLY
+  // ⭐ DASHBOARD Group
   if (role !== "employee") {
-    baseRoutes.unshift({
-      icon: <HomeIcon {...icon} />,
-      name: "Dashboard",
-      path: "/home",
-      element: <Home />,
-    });
-  }
-
-  // ⭐ ADMIN ONLY ROUTES
-  const adminRoutes = [
-    {
-      icon: <UserGroupIcon {...icon} />,
-      name: "Users",
-      path: "/users",
-      element: <Users />,
-    },
-    {
-      icon: <UserPlusIcon {...icon} />,
-      name: "Create User",
-      path: "/create-user",
-      element: <CreateUser />,
-    },
-
-    {
-      icon: <ClockIcon {...icon} />,
-      name: "Attendance",
-      path: "/attendance",
-      element: <Attendance />,
-    },
-    {
-      icon: <CurrencyDollarIcon {...icon} />,
-      name: "Salary",
-      path: "/salary",
-      element: <Salary />,
-    },
-    {
-      icon: <CalendarIcon {...icon} />,
-      name: "Calendar",
-      path: "/calendar",
-      element: <CalendarPage />,
-    },
-  ];
-
-  // ⭐ If admin logged in → include admin routes
-  if (role === "admin") {
-    baseRoutes.push(...adminRoutes);
-  }
-
-  // ⭐ employee ONLY ROUTES
-  const employeeRoutes = [
-    {
-      icon: <ChartBarIcon {...icon} />,
-      name: "employeeDashboard",
-      path: "/employeeDashboard",
-      element: <EmployeeDashboard />,
-    },
-    {
-      icon: <CalendarIcon {...icon} />,
-      name: "Calendar",
-      path: "/calendar",
-      element: <CalendarPage />,
-    },
-  ];
-
-  // ⭐ If employee logged in → include employee routes
-  if (role === "employee") {
-    baseRoutes.push(...employeeRoutes);
-  }
-
-  // ⭐ If Manager logged in → optional permissions
-  // Example: allow managers to see user list but not create user
-  if (role === "manager") {
-    baseRoutes.push({
-      icon: <UserGroupIcon {...icon} />,
-      name: "Users",
-      path: "/users",
-      element: <Users />,
-    });
-  }
-
-  // =====================================================
-  // RETURN FINAL ROUTE STRUCTURE
-  // =====================================================
-  return [
-    {
+    routes.push({
+      title: "Dashboard",
       layout: "dashboard",
-      pages: baseRoutes,
-    },
-
-    {
-      // title: "Auth Pages",
-      layout: "auth",
       pages: [
         {
-          icon: <UserCircleIcon {...icon} />,
-          name: "Sign In",
-          path: "/sign-in",
-          element: <SignIn />,
-        },
-        // {
-        //   icon: <RectangleStackIcon {...icon} />,
-        //   name: "Sign Up",
-        //   path: "/sign-up",
-        //   element: <SignUp />,
-        // },
+          icon: <HomeIcon {...icon} />,
+          name: "Dashboard",
+          path: "/home",
+          element: <Home />,
+        }
+      ]
+    });
+  } else {
+    routes.push({
+      title: "Dashboard",
+      layout: "dashboard",
+      pages: [
+        {
+          icon: <ChartBarIcon {...icon} />,
+          name: "My Dashboard",
+          path: "/employeeDashboard",
+          element: <EmployeeDashboard />,
+        }
+      ]
+    });
+  }
 
-      ],
-    },
-  ];
+  // ⭐ ATTENDANCE Group
+  if (role !== "employee") {
+    routes.push({
+      title: "Attendance",
+      layout: "dashboard",
+      pages: [
+        {
+          icon: <ClockIcon {...icon} />,
+          name: "Attendance Management",
+          path: "/attendance-management",
+          element: <AttendanceManagement />,
+        }
+      ]
+    });
+  } else {
+    // Employee Attendance Group
+    routes.push({
+      title: "Attendance",
+      layout: "dashboard",
+      pages: [
+        {
+          icon: <DocumentCheckIcon {...icon} />,
+          name: "My Holiday Requests",
+          path: "/holiday-requests",
+          element: <HolidayRequests />,
+        }
+      ]
+    });
+  }
+
+  // ⭐ PAYROLL Group
+  if (role !== "employee") {
+    routes.push({
+      title: "Payroll",
+      layout: "dashboard",
+      pages: [
+        {
+          icon: <CurrencyDollarIcon {...icon} />,
+          name: "Payroll Management",
+          path: "/payroll-management",
+          element: <PayrollManagement />,
+        }
+      ]
+    });
+  }
+
+  // ⭐ TRACKING Group
+  if (role !== "employee") {
+    routes.push({
+      title: "Tracking",
+      layout: "dashboard",
+      pages: [
+        {
+          icon: <ShieldCheckIcon {...icon} />,
+          name: "Location & Device",
+          path: "/tracking-settings",
+          element: <TrackingSettings />,
+        }
+      ]
+    });
+  }
+
+  // ⭐ CALENDAR Group
+  routes.push({
+    title: "Calendar",
+    layout: "dashboard",
+    pages: [
+      {
+        icon: <CalendarIcon {...icon} />,
+        name: "Calendar",
+        path: "/calendar",
+        element: <CalendarPage />,
+      }
+    ]
+  });
+
+  // ⭐ USER MANAGEMENT Group
+  if (role === "admin" || role === "manager") {
+    const userPages = [
+      {
+        icon: <UserGroupIcon {...icon} />,
+        name: "Users",
+        path: "/users",
+        element: <Users />,
+      }
+    ];
+    if (role === "admin") {
+      userPages.push({
+        icon: <UserPlusIcon {...icon} />,
+        name: "Create User",
+        path: "/create-user",
+        element: <CreateUser />,
+      });
+    }
+    routes.push({
+      title: "User Management",
+      layout: "dashboard",
+      pages: userPages
+    });
+  }
+
+  routes.push({
+    title: "Hidden",
+    layout: "dashboard",
+    pages: [
+      {
+        path: "/profile",
+        element: <Profile />,
+      }
+    ]
+  });
+
+  // Auth pages logic (hidden from sidebar but needed in router)
+  routes.push({
+    layout: "auth",
+    pages: [
+      {
+        path: "/sign-in",
+        element: <SignIn />,
+      }
+    ]
+  });
+
+  return routes;
 };
 
 export default getRoutesByRole;
