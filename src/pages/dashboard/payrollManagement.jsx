@@ -11,6 +11,7 @@ export function PayrollManagement() {
     const [activeTab, setActiveTab] = useState("setup");
 
     const tabs = [
+        
         {
             id: "setup",
             label: "Salary Setup",

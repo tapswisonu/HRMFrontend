@@ -145,7 +145,7 @@ export function Salary() {
 
     const fetchEmployees = async () => {
         try {
-            const { data } = await axios.get("http://localhost:8000/api/admin/users/employee", {
+            const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/users/employee`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setEmployees(data);
@@ -163,7 +163,7 @@ export function Salary() {
     const handleSaveSalary = async (id, salaryToSave = newSalary) => {
         setSavingId(id);
         try {
-            await axios.put(`http://localhost:8000/api/admin/user/${id}`, { salary: Number(salaryToSave) }, {
+            await axios.put(`${import.meta.env.VITE_API_BASE_URL}/admin/user/${id}`, { salary: Number(salaryToSave) }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             toast.success("Salary updated successfully");
@@ -180,7 +180,7 @@ export function Salary() {
 
     const fetchMonthlyAttendance = async (empId, month, year, baseSalary) => {
         try {
-            const { data } = await axios.get(`http://localhost:8000/api/admin/attendance/${empId}`, {
+            const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/attendance/${empId}`, {
                 headers: { Authorization: `Bearer ${token}` },
                 params: { month, year },
             });

@@ -38,7 +38,7 @@ const MONTHS = [
     { label: "December", value: 12 },
 ];
 
-const API = "http://localhost:8000";
+const API = import.meta.env.VITE_API_BASE_URL.replace('/api', '');
 
 // ── Helpers ──────────────────────────────────────────────────
 const calcWorkingHours = (inTime, outTime) => {

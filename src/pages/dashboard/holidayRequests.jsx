@@ -10,7 +10,7 @@ import {
     ClockIcon,
 } from "@heroicons/react/24/outline";
 
-const BASE = "http://localhost:8000/api";
+const BASE = import.meta.env.VITE_API_BASE_URL;
 
 const STATUS_COLORS = {
     Pending: "bg-amber-50 text-amber-700 border-amber-200",
