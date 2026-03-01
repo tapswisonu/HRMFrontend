@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/Badge";
 import { FormInput, FormSelect } from "@/components/ui/FormInput";
 import { SummaryCard } from "@/components/ui/SummaryCard";
 
-const BASE = "http://localhost:8000/api";
+const BASE = import.meta.env.VITE_API_BASE_URL;
 
 const MONTHS = [
     "January", "February", "March", "April", "May", "June",

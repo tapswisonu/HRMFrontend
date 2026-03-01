@@ -82,7 +82,7 @@ function StatusBadge({ status, checkInTime, checkOutTime }) {
 function SkeletonRow() {
   return (
     <tr className="animate-pulse border-b border-slate-100">
-      {[...Array(7)].map((_, i) => (
+      {[...Array(8)].map((_, i) => (
         <td key={i} className="px-5 py-4">
           <div className={`h-4 bg-slate-100 rounded ${i === 0 ? "w-32" : i === 1 ? "w-40" : "w-16"}`} />
         </td>
@@ -116,8 +116,8 @@ function Pagination({ page, total, onChange }) {
             key={i}
             onClick={() => onChange(i + 1)}
             className={`w-7 h-7 rounded-lg text-xs font-semibold transition-colors ${page === i + 1
-                ? "bg-blue-600 text-white"
-                : "hover:bg-slate-100 text-slate-600"
+              ? "bg-blue-600 text-white"
+              : "hover:bg-slate-100 text-slate-600"
               }`}
           >
             {i + 1}
@@ -169,7 +169,7 @@ export function Users() {
 
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const COLS = ["User", "Email", "Role", "Status", "Location", "Joined", "Action"];
+  const COLS = ["User", "Email", "Role", "Salary", "Status", "Location", "Joined", "Action"];
 
   return (
     <div className="mt-10 mb-8 flex flex-col gap-8">
@@ -205,8 +205,8 @@ export function Users() {
             <button
               onClick={() => setRole("employee")}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${role === "employee"
-                  ? "bg-white text-blue-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                ? "bg-white text-blue-700 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
                 }`}
             >
               <UsersIcon className="w-4 h-4" />
@@ -215,8 +215,8 @@ export function Users() {
             <button
               onClick={() => setRole("admin")}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${role === "admin"
-                  ? "bg-white text-violet-700 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                ? "bg-white text-violet-700 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
                 }`}
             >
               <ShieldCheckIcon className="w-4 h-4" />
@@ -274,7 +274,7 @@ export function Users() {
               {/* Error */}
               {!loading && error && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-12 text-center">
+                  <td colSpan={8} className="px-5 py-12 text-center">
                     <p className="text-sm text-red-500 font-medium">{error}</p>
                   </td>
                 </tr>
@@ -283,7 +283,7 @@ export function Users() {
               {/* Empty state */}
               {!loading && !error && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-16 text-center">
+                  <td colSpan={8} className="px-5 py-16 text-center">
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
                         <UsersIcon className="w-6 h-6 text-slate-400" />
@@ -326,6 +326,11 @@ export function Users() {
                   {/* Role */}
                   <td className="px-5 py-3.5">
                     <RoleBadge role={u.role} />
+                  </td>
+
+                  {/* Salary */}
+                  <td className="px-5 py-3.5">
+                    <span className="text-sm font-semibold text-slate-700">₹{u.salary || 15000}</span>
                   </td>
 
                   {/* Status */}

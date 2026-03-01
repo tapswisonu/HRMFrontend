@@ -26,10 +26,10 @@ export function CalendarPage() {
     const fetchData = async () => {
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const apptRes = await axios.get("http://localhost:8000/api/admin/appointments", config);
+            const apptRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/admin/appointments`, config);
             setAppointments(apptRes.data);
 
-            const attRes = await axios.get("http://localhost:8000/api/attendance/getMyAttendance", config);
+            const attRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/attendance/getMyAttendance`, config);
             setAttendance(attRes.data);
         } catch (error) {
             console.error(error);
@@ -46,7 +46,7 @@ export function CalendarPage() {
             const config = { headers: { Authorization: `Bearer ${token}` } };
             const apptDate = newAppt.date ? new Date(newAppt.date) : date;
 
-            await axios.post("http://localhost:8000/api/admin/appointment", {
+            await axios.post(`${import.meta.env.VITE_API_BASE_URL}/admin/appointment`, {
                 ...newAppt,
                 date: apptDate
             }, config);

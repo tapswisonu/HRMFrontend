@@ -128,7 +128,7 @@ export function Attendance() {
         setSaving(true);
         try {
             await axios.put(
-                `http://localhost:8000/api/attendance/${selectedRecord._id}`,
+                `${import.meta.env.VITE_API_BASE_URL}/attendance/${selectedRecord._id}`,
                 formData,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
