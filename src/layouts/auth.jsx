@@ -3,13 +3,15 @@ import { useSelector } from "react-redux";
 import { getRoutesByRole } from "@/routes";
 
 export function Auth() {
-  // get logged-in user role OR default to "employee"
+  const token = useSelector((state) => state.auth.token);
   const role = useSelector((state) => state.auth.user?.role) || "employee";
 
-  // generate all routes for this role
-  const routes = getRoutesByRole(role);
+  // ⭐ If already logged in, go straight to dashboard
+  if (token) {
+    return <Navigate to="/dashboard/home" replace />;
+  }
 
-  // extract only auth pages
+  const routes = getRoutesByRole(role);
   const authRoutes = routes.find((r) => r.layout === "auth")?.pages || [];
 
   return (

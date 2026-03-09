@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAttendance } from "../../redux/slices/attendanceSlice";
+import { fetchAttendance } from "../../features/attendance/attendanceSlice";
 import CheckIn from "./CheckIn";
 import {
   ClockIcon,

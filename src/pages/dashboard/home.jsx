@@ -77,10 +77,11 @@ export function Home() {
       try {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         const { data } = await axios.get(
-          `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"}/admin/dashboard-stats`,
+          `${import.meta.env.VITE_API_BASE_URL}/employee/dashboard-stats`,
           config
         );
-        setStats(data);
+        // unwrap { success, data } response wrapper
+        setStats(data.data ?? data);
         setLoading(false);
       } catch (error) {
         console.error("Failed to fetch dashboard stats", error);

@@ -25,7 +25,7 @@ export function EmployeeMap() {
 
     const fetchLocations = async () => {
         try {
-            const { data } = await api.get("/admin/locations");
+            const { data } = await api.get("/employee/locations");
             setLocations(data);
             setLoading(false);
         } catch (err) {

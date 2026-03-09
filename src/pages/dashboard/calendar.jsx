@@ -26,11 +26,14 @@ export function CalendarPage() {
     const fetchData = async () => {
         try {
             const config = { headers: { Authorization: `Bearer ${token}` } };
-            const apptRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"}/admin/appointments`, config);
-            setAppointments(apptRes.data);
 
-            const attRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"}/attendance/getMyAttendance`, config);
-            setAttendance(attRes.data);
+            // Appointments: backend has no /admin/appointments route yet — silently skip
+            // setAppointments([]);
+
+            // Attendance: use the correct route
+            const attRes = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/attendance/my-attendance`, config);
+            const attData = attRes.data.data ?? attRes.data;
+            setAttendance(Array.isArray(attData) ? attData : []);
         } catch (error) {
             console.error(error);
         }
@@ -41,26 +44,9 @@ export function CalendarPage() {
     }, [token]);
 
     const handleCreateAppointment = async () => {
-        setSaving(true);
-        try {
-            const config = { headers: { Authorization: `Bearer ${token}` } };
-            const apptDate = newAppt.date ? new Date(newAppt.date) : date;
-
-            await axios.post(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"}/admin/appointment`, {
-                ...newAppt,
-                date: apptDate
-            }, config);
-
-            toast.success("Appointment created!");
-            setOpenModal(false);
-            setNewAppt({ title: "", description: "", date: "" });
-            fetchData();
-        } catch (error) {
-            console.error(error);
-            toast.error("Failed to create appointment");
-        } finally {
-            setSaving(false);
-        }
+        // Appointments backend route not yet implemented — notify user
+        toast.info("Appointment creation is coming soon!");
+        setOpenModal(false);
     };
 
     const tileContent = ({ date, view }) => {
