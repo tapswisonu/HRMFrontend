@@ -3,15 +3,15 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { CurrencyDollarIcon, CalendarDaysIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 
 // Import the existing pages to render exactly as they are within the tabs
-import { Salary } from "./salary";
-import AttendanceSalary from "./attendanceSalary";
-import SalaryReport from "./salaryReport";
+import { Salary } from "./Salary";
+import AttendanceSalary from "./AttendanceSalary";
+import SalaryReport from "./SalaryReport";
 
 export function PayrollManagement() {
     const [activeTab, setActiveTab] = useState("setup");
 
     const tabs = [
-        
+
         {
             id: "setup",
             label: "Salary Setup",

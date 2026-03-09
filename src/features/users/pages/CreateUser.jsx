@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { createUser } from "../../features/users/userSlice";
+import { createUser } from "../userSlice";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
@@ -8,7 +8,9 @@ import {
   EyeSlashIcon,
   UserPlusIcon,
   ArrowLeftIcon,
+  ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
+import { isSuperAdmin } from "@/utils/rbac";
 
 // ── Reusable Field Component ───────────────────────────────────────────────────
 function Field({ label, required, error, children }) {
@@ -35,10 +37,12 @@ const inputCls = `
   disabled:opacity-60 disabled:cursor-not-allowed
 `.trim();
 
-// ── Role descriptions ─────────────────────────────────────────────────────────
-const ROLES = [
-  { value: "employee", label: "Employee", desc: "Access attendance, salary & profile" },
-  { value: "admin", label: "Admin", desc: "Full system access and user management" },
+// ── All available roles (filtered by requester's role at runtime) ─────────────
+const ALL_ROLE_OPTIONS = [
+  { value: "employee", label: "👤 Employee", desc: "Access attendance, salary & profile", minCreator: "admin" },
+  { value: "manager", label: "👔 Manager", desc: "Team attendance, requests & employee view", minCreator: "admin" },
+  { value: "admin", label: "🛡 Admin", desc: "Full system access & user management", minCreator: "super_admin" },
+  { value: "super_admin", label: "⭐ Super Admin", desc: "Unrestricted access — create admins, manage roles", minCreator: "super_admin" },
 ];
 
 // ── Main Component ─────────────────────────────────────────────────────────────
@@ -50,7 +54,16 @@ export default function CreateUser() {
   const [errors, setErrors] = useState({});
   const dispatch = useDispatch();
   const { loading } = useSelector((s) => s.users);
+  const currentUser = useSelector((s) => s.auth.user);
   const navigate = useNavigate();
+
+  // Filter available roles based on who's creating
+  const ROLES = useMemo(() => {
+    const creatorRole = currentUser?.role;
+    if (isSuperAdmin(creatorRole)) return ALL_ROLE_OPTIONS;
+    // Admin can create employee and manager only
+    return ALL_ROLE_OPTIONS.filter((r) => r.minCreator === "admin");
+  }, [currentUser?.role]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

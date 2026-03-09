@@ -5,8 +5,8 @@ import {
   doCheckOut,
   fetchAttendance,
   clearWarnings,
-} from "../../redux/slices/attendanceSlice";
-import { fetchTrackingSettings } from "../../redux/slices/trackingSlice";
+} from "../../features/attendance/attendanceSlice";
+import { fetchTrackingSettings } from "../../features/tracking/trackingSlice";
 import { getDeviceId } from "../../utils/getDeviceId";
 import { getLocation } from "../../utils/getLocation";
 import { toast } from "react-toastify";

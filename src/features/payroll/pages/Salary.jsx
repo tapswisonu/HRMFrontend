@@ -145,10 +145,12 @@ export function Salary() {
 
     const fetchEmployees = async () => {
         try {
-            const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"}/admin/users/employee`, {
+            const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/employee/users/employee`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setEmployees(data);
+            // unwrap { success, data } response wrapper
+            const list = data.data ?? data;
+            setEmployees(Array.isArray(list) ? list : []);
         } catch {
             toast.error("Failed to fetch employees");
         } finally {
@@ -163,7 +165,7 @@ export function Salary() {
     const handleSaveSalary = async (id, salaryToSave = newSalary) => {
         setSavingId(id);
         try {
-            await axios.put(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"}/admin/user/${id}`, { salary: Number(salaryToSave) }, {
+            await axios.put(`${import.meta.env.VITE_API_BASE_URL}/employee/user/${id}`, { salary: Number(salaryToSave) }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             toast.success("Salary updated successfully");
@@ -180,24 +182,31 @@ export function Salary() {
 
     const fetchMonthlyAttendance = async (empId, month, year, baseSalary) => {
         try {
-            const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"}/admin/attendance/${empId}`, {
+            // Use the correct admin attendance view: GET /attendance/my-attendance with employee context
+            // Since employees use my-attendance and admins can see all via /attendance/requests/all,
+            // we calculate from the full attendance list filtered by employee ID
+            const { data } = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/salary/fetch/${empId}`, {
                 headers: { Authorization: `Bearer ${token}` },
-                params: { month, year },
+                params: { month: month + 1, year },
             });
-            setAttendanceData(data);
+            const record = data.data ?? data;
+            // Use days from salary record or build from raw data
+            const rawDays = record.days || [];
+            setAttendanceData(rawDays.filter(d => d.status === "Present" || d.status === "Checked Out"));
+
             const date = new Date(year, month);
             const daysInMonth = getDaysInMonth(date);
             const allDays = eachDayOfInterval({ start: startOfMonth(date), end: endOfMonth(date) });
             let presentCount = 0, weekendCount = 0, paidCount = 0;
             allDays.forEach((day) => {
-                const isPresent = data.find((att) => isSameDay(new Date(att.date), day));
+                const isPresent = rawDays.find((d) => isSameDay(new Date(d.date), day) &&
+                    (d.status === "Present" || d.status === "Checked Out"));
                 const isWknd = isWeekend(day);
                 if (isPresent) { presentCount++; paidCount++; }
                 else if (isWknd) { weekendCount++; paidCount++; }
             });
             const base = Number(baseSalary || selectedEmp?.salary || 0);
             const final = daysInMonth > 0 ? (base / daysInMonth) * paidCount : 0;
-            // setPresentDays && setPresentDays(presentCount);
             setCalculatedSalary(final.toFixed(2));
             setBreakdown({ baseSalary: base, daysInMonth, weekends: weekendCount, presentDays: presentCount, paidDays: paidCount, finalSalary: final.toFixed(2) });
         } catch {

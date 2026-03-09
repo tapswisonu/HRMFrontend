@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { ClockIcon, DocumentCheckIcon, CalendarIcon } from "@heroicons/react/24/outline";
 
 // Import individual pages
-import Attendance from "./attendance";
-import AttendanceRequests from "./attendanceRequests";
-import HolidayRequests from "./holidayRequests";
+import Attendance from "./Attendance";
+import AttendanceRequests from "./AttendanceRequests";
+import HolidayRequests from "../../../features/holiday/pages/HolidayRequests";
 
 export function AttendanceManagement() {
     const [activeTab, setActiveTab] = useState("daily");
@@ -50,8 +50,8 @@ export function AttendanceManagement() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 pb-4 text-sm font-bold transition-all ${activeTab === tab.id
-                                        ? "text-brand-primary border-b-2 border-brand-primary"
-                                        : "text-slate-400 hover:text-slate-600 border-b-2 border-transparent"
+                                    ? "text-brand-primary border-b-2 border-brand-primary"
+                                    : "text-slate-400 hover:text-slate-600 border-b-2 border-transparent"
                                     }`}
                             >
                                 {tab.icon}

@@ -28,7 +28,6 @@ export const updateTrackingSettings = createAsyncThunk(
             const { data } = await axios.put(`${BASE}/attendance/tracking-settings`, payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            // unwrap { success, data } wrapper
             return data.data ?? data.settings ?? data;
         } catch (err) {
             return rejectWithValue(err.response?.data?.message || err.message);

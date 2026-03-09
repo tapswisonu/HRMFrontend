@@ -71,45 +71,47 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
       {/* ── Nav Items ───────────────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto px-3 py-4">
-        {routes.map(({ layout: routeLayout, title, pages }, key) => (
-          <div key={key} className="mb-4">
-            {title && (
-              <p
-                className={`mx-3 mb-2 mt-2 text-[10px] font-black uppercase tracking-widest ${subTextColor} opacity-80`}
-              >
-                {title}
-              </p>
-            )}
-            <ul className="flex flex-col gap-0.5">
-              {pages.map(({ icon, name, path }) => (
-                <li key={name || path}>
-                  <NavLink to={`/${routeLayout || "dashboard"}${path}`}>
-                    {({ isActive }) => (
-                      <div
-                        className={`
+        {routes
+          .filter(({ title }) => title !== "Hidden")
+          .map(({ layout: routeLayout, title, pages }, key) => (
+            <div key={key} className="mb-4">
+              {title && (
+                <p
+                  className={`mx-3 mb-2 mt-2 text-[10px] font-black uppercase tracking-widest ${subTextColor} opacity-80`}
+                >
+                  {title}
+                </p>
+              )}
+              <ul className="flex flex-col gap-0.5">
+                {pages.filter(({ name }) => !!name).map(({ icon, name, path }) => (
+                  <li key={name || path}>
+                    <NavLink to={`/${routeLayout || "dashboard"}${path}`}>
+                      {({ isActive }) => (
+                        <div
+                          className={`
                           flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer
                           transition-colors duration-150 text-sm font-medium
                           ${isActive
-                            ? `${activeBg} font-semibold`
-                            : `${textColor} ${hoverBg}`
-                          }
+                              ? `${activeBg} font-semibold`
+                              : `${textColor} ${hoverBg}`
+                            }
                         `}
-                      >
-                        <span
-                          className={`shrink-0 [&>svg]:w-[18px] [&>svg]:h-[18px] ${isActive ? activeText : subTextColor
-                            }`}
                         >
-                          {icon}
-                        </span>
-                        <span className="truncate">{name || "Untitled"}</span>
-                      </div>
-                    )}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+                          <span
+                            className={`shrink-0 [&>svg]:w-[18px] [&>svg]:h-[18px] ${isActive ? activeText : subTextColor
+                              }`}
+                          >
+                            {icon}
+                          </span>
+                          <span className="truncate">{name}</span>
+                        </div>
+                      )}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
       </div>
 
       {/* ── Logout — pinned bottom ────────────────────────────────────────── */}

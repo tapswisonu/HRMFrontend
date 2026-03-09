@@ -28,7 +28,21 @@ module.exports = withMT({
       borderRadius: {
         '2xl': '16px',
         'xl': '12px',
-      }
+      },
+      keyframes: {
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        fadeInDown: {
+          '0%': { opacity: '0', transform: 'translateY(-6px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+      },
+      animation: {
+        'fadeInUp': 'fadeInUp 0.18s ease-out',
+        'fadeInDown': 'fadeInDown 0.12s ease-out',
+      },
     },
   },
   plugins: [],

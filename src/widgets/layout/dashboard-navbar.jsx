@@ -1,6 +1,6 @@
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "@/redux/slices/authSlice";
+import { logout } from "@/features/auth/authSlice";
 import {
   Navbar,
   Typography,

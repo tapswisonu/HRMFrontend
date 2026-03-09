@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
+import api from "../../../app/api";
 import { toast } from "react-toastify";
 import {
     ArrowPathIcon,
@@ -13,6 +12,7 @@ import {
     CurrencyRupeeIcon,
     ExclamationCircleIcon,
     LockClosedIcon,
+    BoltIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 
@@ -23,23 +23,22 @@ import { Badge } from "@/components/ui/Badge";
 import { FormInput, FormSelect } from "@/components/ui/FormInput";
 import { SummaryCard } from "@/components/ui/SummaryCard";
 
-const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
-
+// ── Constants ─────────────────────────────────────────────────────────────────
 const MONTHS = [
     "January", "February", "March", "April", "May", "June",
     "July", "August", "September", "October", "November", "December",
 ];
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt = (n) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0);
+const fmt = (n) =>
+    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n || 0);
 const fmtNum = (n) => Number((n || 0).toFixed(1));
 
-// ── Avatar initials ───────────────────────────────────────────────────────────
+const PAGE_SIZE = 10;
+
+// ── Avatar ────────────────────────────────────────────────────────────────────
 const COLORS = [
-    "bg-blue-100 text-brand-primary",
-    "bg-violet-100 text-violet-700",
-    "bg-amber-100 text-amber-700",
-    "bg-emerald-100 text-brand-success",
+    "bg-blue-100 text-brand-primary", "bg-violet-100 text-violet-700",
+    "bg-amber-100 text-amber-700", "bg-emerald-100 text-brand-success",
     "bg-rose-100 text-brand-danger",
 ];
 function Avatar({ name }) {
@@ -52,7 +51,7 @@ function Avatar({ name }) {
     );
 }
 
-// ── Skeleton Row ─────────────────────────────────────────────────────────────
+// ── Skeleton Row ──────────────────────────────────────────────────────────────
 function SkeletonRow() {
     return (
         <tr className="animate-pulse border-b border-brand-border">
@@ -64,8 +63,7 @@ function SkeletonRow() {
     );
 }
 
-// ── Pagination ───────────────────────────────────────────────────────────────
-const PAGE_SIZE = 10;
+// ── Pagination ────────────────────────────────────────────────────────────────
 function Pagination({ page, total, onChange }) {
     const pages = Math.ceil(total / PAGE_SIZE);
     if (pages <= 1) return null;
@@ -93,8 +91,9 @@ function Pagination({ page, total, onChange }) {
     );
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── Stat Pill ─────────────────────────────────────────────────────────────────
 function StatPill({ label, value, variant = "neutral" }) {
+    if (!value && value !== 0) return null;
     return (
         <span className="flex flex-col items-center gap-0.5 min-w-[36px]">
             <Badge variant={variant}>{value}</Badge>
@@ -103,6 +102,7 @@ function StatPill({ label, value, variant = "neutral" }) {
     );
 }
 
+// ── Breakdown Row ─────────────────────────────────────────────────────────────
 function BreakdownRow({ label, value, bold }) {
     return (
         <div className={`flex items-center justify-between py-2 border-b border-brand-border/50 last:border-0 ${bold ? "font-bold text-slate-900 mt-2 text-base" : "text-slate-700"}`}>
@@ -112,16 +112,21 @@ function BreakdownRow({ label, value, bold }) {
     );
 }
 
-function EmployeeTableRow({ report, onSave, saving }) {
+// ── Employee Row ──────────────────────────────────────────────────────────────
+function EmployeeTableRow({ report, onSave, onStatusChange, saving, isLocked }) {
     const [open, setOpen] = useState(false);
-    const [advance, setAdvance] = useState(0);
+    const [advance, setAdvance] = useState(report.advanceDeduction || 0);
 
     const netAfterAdvance = Math.max(0, (report.grossSalary || 0) - advance);
+    const statusLocked = isLocked || report.status === "Finalized";
 
     return (
         <>
-            <tr className={`bg-white hover:bg-slate-50 transition-colors group cursor-pointer ${open ? "border-b-0" : "border-b border-brand-border"}`} onClick={() => setOpen(!open)}>
-                {/* Employee Name & Avatar */}
+            <tr
+                className={`bg-white hover:bg-slate-50 transition-colors group cursor-pointer ${open ? "border-b-0" : "border-b border-brand-border"}`}
+                onClick={() => setOpen(!open)}
+            >
+                {/* Employee */}
                 <td className="px-6 py-4">
                     <div className="flex items-center gap-4">
                         <Avatar name={report.name} />
@@ -137,80 +142,90 @@ function EmployeeTableRow({ report, onSave, saving }) {
                     <div className="flex items-center gap-2 lg:gap-3 flex-wrap">
                         <StatPill label="Present" value={report.presentDays || 0} variant="success" />
                         <StatPill label="Absent" value={report.absentDays || 0} variant="danger" />
-                        <StatPill label="HalfDay" value={report.halfDays || 0} variant="warning" />
-                        <StatPill label="Leave" value={report.leaveDays || 0} variant="primary" />
-                        {(report.holidayDays || 0) > 0 && <StatPill label="Holiday" value={report.holidayDays} variant="neutral" />}
+                        <StatPill label="Half Day" value={report.halfDays || 0} variant="warning" />
+                        <StatPill label="Leave" value={report.leaveDays || 0} variant="neutral" />
+                        {(report.holidayDays || 0) > 0 && <StatPill label="Holiday" value={report.holidayDays} variant="primary" />}
                     </div>
                 </td>
 
                 {/* Gross Salary & Status */}
                 <td className="px-6 py-4">
-                    <p className="text-base font-black tracking-tight text-slate-800">{fmt(report.grossSalary)}</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                        {report.attendanceSource && (
-                            <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full ${report.attendanceSource === "admin" ? "bg-blue-100 text-blue-700" : report.attendanceSource === "mixed" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>
-                                {report.attendanceSource}
-                            </span>
-                        )}
-                        {report.status === "Finalized" && (
-                            <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 flex items-center gap-0.5">
-                                <LockClosedIcon className="w-2.5 h-2.5" /> Locked
-                            </span>
-                        )}
-                    </div>
+                    {report.error ? (
+                        <span className="text-xs text-brand-danger font-semibold">{report.error}</span>
+                    ) : (
+                        <>
+                            <p className="text-base font-black tracking-tight text-slate-800">{fmt(report.grossSalary)}</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                                {report.attendanceSource && (
+                                    <span className={`text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-full ${report.attendanceSource === "admin" ? "bg-blue-100 text-blue-700" : report.attendanceSource === "mixed" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>
+                                        {report.attendanceSource}
+                                    </span>
+                                )}
+                                {report.status === "Finalized" && (
+                                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600 flex items-center gap-0.5">
+                                        <LockClosedIcon className="w-2.5 h-2.5" /> Locked
+                                    </span>
+                                )}
+                                {report.status === "Paid" && (
+                                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                                        Paid
+                                    </span>
+                                )}
+                            </div>
+                        </>
+                    )}
                 </td>
 
-                {/* Toggle Action */}
+                {/* Toggle */}
                 <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end">
-                        {open
-                            ? <ChevronUpIcon className="w-5 h-5 text-slate-400 shrink-0" />
-                            : <ChevronDownIcon className="w-5 h-5 text-slate-400 shrink-0" />}
+                        {open ? <ChevronUpIcon className="w-5 h-5 text-slate-400" /> : <ChevronDownIcon className="w-5 h-5 text-slate-400" />}
                     </div>
                 </td>
             </tr>
 
-            {/* Expandable Breakdown Row */}
+            {/* Expanded */}
             {open && (
                 <tr className="bg-brand-bg/50 border-b border-brand-border">
                     <td colSpan={4} className="p-0">
                         <div className="px-6 py-6 animate-fade-in-up border-t border-brand-border">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-                                {/* Rate Section */}
+                                {/* Rates & Hours */}
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-brand-border pb-2 mb-3">Rates & Hours</p>
                                     <BreakdownRow label="Base Salary" value={fmt(report.monthlySalary)} />
                                     <BreakdownRow label="Per Day Rate" value={fmt(report.perDayRate)} />
                                     <BreakdownRow label="Per Hour Rate" value={fmt(report.perHourRate)} />
-                                    <BreakdownRow label="Required Hrs/Day" value={`${report.requiredHours}h`} />
+                                    <BreakdownRow label="Required Hrs/Day" value={`${report.requiredHours || 12}h`} />
                                     <BreakdownRow label="Total Hours Worked" value={`${fmtNum(report.totalHoursWorked)}h`} />
                                     <BreakdownRow label="Overtime Hours" value={`${fmtNum(report.overtimeHours)}h`} />
+                                    <BreakdownRow label="Payable Days" value={`${fmtNum(report.payableDays)} days`} />
                                 </div>
 
                                 {/* Salary Breakdown */}
                                 <div>
                                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b border-brand-border pb-2 mb-3">Salary Breakdown</p>
-                                    <BreakdownRow label="Payable Days" value={`${fmtNum(report.payableDays)} days`} />
                                     <BreakdownRow label="Gross Salary" value={fmt(report.grossSalary)} />
 
-                                    {/* Advance Input */}
+                                    {/* Advance Deduction Input */}
                                     <div className="flex items-center justify-between py-2 border-b border-brand-border h-12 mt-1">
                                         <span className="text-xs font-semibold text-slate-500">Advance Deduction</span>
                                         <input
                                             type="number"
                                             min="0"
                                             value={advance}
+                                            disabled={statusLocked}
                                             onClick={(e) => e.stopPropagation()}
                                             onChange={(e) => setAdvance(Math.max(0, Number(e.target.value)))}
-                                            className="w-24 h-8 text-right font-bold text-sm bg-white border border-brand-border rounded-lg px-2 focus:outline-none focus:ring-2 focus:ring-brand-primary"
+                                            className="w-24 h-8 text-right font-bold text-sm bg-white border border-brand-border rounded-lg px-2 focus:outline-none focus:ring-2 focus:ring-brand-primary disabled:opacity-50 disabled:bg-slate-50"
                                         />
                                     </div>
 
                                     <BreakdownRow label="Net Payable" value={fmt(netAfterAdvance)} bold />
 
-                                    {/* Save Button */}
-                                    <div className="mt-5 flex justify-end">
-                                        {report.status !== "Finalized" && report.status !== "Paid" && (
+                                    {/* Actions */}
+                                    <div className="mt-5 flex items-center gap-2 justify-end flex-wrap">
+                                        {!statusLocked && (
                                             <Button
                                                 onClick={(e) => { e.stopPropagation(); onSave(report.employeeId, advance); }}
                                                 disabled={saving}
@@ -220,18 +235,22 @@ function EmployeeTableRow({ report, onSave, saving }) {
                                                 {saving ? "Saving…" : "Calculate & Save"}
                                             </Button>
                                         )}
-                                        {report.status && (
+
+                                        {report.status && report.status !== "Finalized" && (
                                             <Button
-                                                onClick={(e) => { e.stopPropagation(); window.handleStatusToggle && window.handleStatusToggle(report.employeeId, report.status === "Paid" ? "Draft" : "Paid"); }}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onStatusChange(report.employeeId, report.status === "Paid" ? "Draft" : "Paid");
+                                                }}
                                                 variant={report.status === "Paid" ? "secondary" : "success"}
                                                 size="sm"
-                                                className="ml-3"
                                             >
-                                                {report.status === "Paid" ? "Mark Pending" : "Mark Paid (Given)"}
+                                                {report.status === "Paid" ? "Mark Pending" : "Mark Paid"}
                                             </Button>
                                         )}
+
                                         {report.status === "Finalized" && (
-                                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-lg border border-brand-border ml-3">
+                                            <span className="flex items-center gap-1.5 text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-lg border border-brand-border">
                                                 <LockClosedIcon className="w-3.5 h-3.5" /> Locked
                                             </span>
                                         )}
@@ -248,80 +267,124 @@ function EmployeeTableRow({ report, onSave, saving }) {
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function SalaryReport() {
-    const token = useSelector((s) => s.auth.token);
-
     const now = new Date();
-    const [month, setMonth] = useState(now.getMonth() + 1); // 1-12
+    const [month, setMonth] = useState(now.getMonth() + 1);
     const [year, setYear] = useState(now.getFullYear());
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [generating, setGenerating] = useState(false);
     const [savingId, setSavingId] = useState(null);
     const [lockingMonth, setLockingMonth] = useState(false);
+    const [lockInfo, setLockInfo] = useState(null);
     const [search, setSearch] = useState("");
     const [page, setPage] = useState(1);
 
-    const headers = { Authorization: `Bearer ${token}` };
+    // ── Fetch lock status ──────────────────────────────────────────────────
+    const fetchLockStatus = useCallback(async () => {
+        try {
+            const { data } = await api.get("/salary/lock-status", { params: { month, year } });
+            setLockInfo(data.data ?? data);
+        } catch {
+            setLockInfo(null);
+        }
+    }, [month, year]);
 
+    // ── Fetch all salary reports ───────────────────────────────────────────
     const fetchReports = useCallback(async () => {
         setLoading(true);
         try {
-            const { data } = await axios.get(`${BASE}/salary/all?month=${month}&year=${year}`, { headers });
-            setReports(data);
+            const { data } = await api.get("/salary/reports/all", { params: { month, year } });
+            const list = data.data ?? data;
+            setReports(Array.isArray(list) ? list : []);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to load salary reports");
         } finally {
             setLoading(false);
         }
-    }, [month, year, token]);
+    }, [month, year]);
 
-    useEffect(() => { fetchReports(); }, [fetchReports]);
+    useEffect(() => {
+        fetchReports();
+        fetchLockStatus();
+    }, [fetchReports, fetchLockStatus]);
 
+    const isLocked = lockInfo?.isLocked === true;
+
+    // ── Handlers ──────────────────────────────────────────────────────────
     const handleSave = async (empId, advance) => {
         setSavingId(empId);
         try {
-            await axios.post(
-                `${BASE}/salary/save/${empId}?month=${month}&year=${year}`,
-                { advanceDeduction: advance },
-                { headers }
-            );
+            await api.post(`/salary/save/${empId}`, { advanceDeduction: advance }, { params: { month, year } });
             toast.success("Salary record saved!");
             fetchReports();
         } catch (err) {
-            toast.error(err.response?.data?.error || "Save failed");
-        } finally { setSavingId(null); }
+            toast.error(err.response?.data?.message || "Save failed");
+        } finally {
+            setSavingId(null);
+        }
+    };
+
+    const handleStatusChange = async (empId, newStatus) => {
+        try {
+            await api.put(`/salary/status/${empId}`, { month, year, status: newStatus });
+            toast.success(`Salary marked as ${newStatus}`);
+            fetchReports();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to update status");
+        }
+    };
+
+    const handleGenerateAll = async () => {
+        if (!window.confirm(`Auto-generate salary records for ALL employees for ${MONTHS[month - 1]} ${year}?`)) return;
+        setGenerating(true);
+        try {
+            const { data } = await api.post("/salary/generate-all", { month, year });
+            const result = data.data ?? data;
+            toast.success(`Generated: ${result.success?.length || 0} success, ${result.failed?.length || 0} failed`);
+            fetchReports();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to generate payroll");
+        } finally {
+            setGenerating(false);
+        }
     };
 
     const handleLockPayroll = async () => {
-        if (!window.confirm("Are you sure you want to finalize payroll for this month? Tracking settings, attendance, and salaries will be permanently locked.")) return;
+        if (!window.confirm("Finalize and lock payroll? All salary records will be permanently locked.")) return;
         setLockingMonth(true);
         try {
-            await axios.post(`${BASE}/salary/lock`, { month, year, remark: "Finalized via Report dashboard" }, { headers });
-            toast.success("Payroll Finalized and Locked!");
+            await api.post("/salary/lock", { month, year, remark: "Finalized via Salary Reports" });
+            toast.success("Payroll finalized and locked!");
             fetchReports();
+            fetchLockStatus();
         } catch (err) {
-            toast.error(err.response?.data?.message || err.response?.data?.error || "Failed to lock payroll");
+            toast.error(err.response?.data?.message || "Failed to lock payroll");
         } finally {
             setLockingMonth(false);
         }
     };
 
-    const handleStatusToggle = async (empId, newStatus) => {
-        try {
-            await axios.post(`${BASE}/salary/status/${empId}`, { month, year, status: newStatus }, { headers });
-            toast.success(`Salary marked as ${newStatus}`);
-            fetchReports();
-        } catch (err) {
-            toast.error(err.response?.data?.message || err.response?.data?.error || "Failed to update status");
-        }
+    const exportCSV = () => {
+        const headers = ["Name", "Email", "Base Salary", "Present", "Absent", "Half Day", "Leave", "Holiday", "Hours", "Overtime", "Per Day Rate", "Gross", "Advance", "Net"];
+        const rows = reports.map((r) => [
+            r.name, r.email, r.monthlySalary, r.presentDays, r.absentDays,
+            r.halfDays, r.leaveDays, r.holidayDays, r.totalHoursWorked,
+            r.overtimeHours, r.perDayRate, r.grossSalary, r.advanceDeduction, r.netSalary,
+        ]);
+        const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `salary_${year}_${String(month).padStart(2, "0")}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
     };
-
-    // Quick hack for rows without prop drilling
-    window.handleStatusToggle = handleStatusToggle;
 
     // Summary cards
     const totalPayroll = reports.reduce((s, r) => s + (r.grossSalary || 0), 0);
-    const totalGiven = reports.filter(r => r.status === "Paid").reduce((s, r) => s + (r.netSalary || 0), 0);
-    const totalPending = reports.filter(r => r.status !== "Paid").reduce((s, r) => s + (r.netSalary || 0), 0);
+    const totalGiven = reports.filter((r) => r.status === "Paid").reduce((s, r) => s + (r.netSalary || 0), 0);
+    const totalPending = reports.filter((r) => r.status !== "Paid").reduce((s, r) => s + (r.grossSalary || 0), 0);
 
     const filtered = useMemo(() =>
         reports.filter((r) => {
@@ -331,41 +394,46 @@ export default function SalaryReport() {
 
     const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-    // CSV export
-    const exportCSV = () => {
-        const headers = ["Name", "Email", "Base Salary", "Present", "Absent", "HalfDay", "Leave", "Holiday", "Hours", "Overtime", "Gross", "Net"];
-        const rows = reports.map((r) => [
-            r.name, r.email, r.monthlySalary, r.presentDays, r.absentDays,
-            r.halfDays, r.leaveDays, r.holidayDays, r.totalHoursWorked,
-            r.overtimeHours, r.grossSalary, r.netSalary,
-        ]);
-        const csv = [headers, ...rows].map((r) => r.join(",")).join("\n");
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url; a.download = `salary_${year}_${month}.csv`; a.click();
-    };
+    const yearOptions = Array.from({ length: Math.max(now.getFullYear() + 1, 2026) - 2025 + 1 }, (_, i) => 2025 + i);
 
     return (
         <div className="mt-8 mb-24 flex flex-col gap-6 max-w-[1200px] mx-auto pb-10">
 
-            {/* ── Page Header ─────────────────────────────────────────────────── */}
+            {/* Page Header */}
             <PageHeader
                 title="Salary Report"
-                subtitle="Monthly payroll breakdown based on merged attendance"
+                subtitle="Monthly payroll breakdown — all calculations from backend"
                 actionNode={
-                    <>
-                        <Button onClick={handleLockPayroll} disabled={lockingMonth} variant="danger" icon={<LockClosedIcon />}>
-                            {lockingMonth ? "Locking..." : "Finalize Payroll"}
+                    <div className="flex items-center gap-2">
+                        <Button onClick={handleGenerateAll} disabled={generating || isLocked} variant="secondary" icon={generating ? <ArrowPathIcon className="animate-spin" /> : <BoltIcon />}>
+                            {generating ? "Generating..." : "Generate All"}
                         </Button>
+                        {!isLocked && (
+                            <Button onClick={handleLockPayroll} disabled={lockingMonth} variant="danger" icon={<LockClosedIcon />}>
+                                {lockingMonth ? "Locking..." : "Finalize Payroll"}
+                            </Button>
+                        )}
                         <Button onClick={exportCSV} variant="secondary" icon={<DocumentArrowDownIcon />}>
                             Export CSV
                         </Button>
-                    </>
+                    </div>
                 }
             />
 
-            {/* ── Summary Cards ────────────────────────────────────────────────── */}
+            {/* Lock Banner */}
+            {isLocked && (
+                <div className="flex items-center gap-3 rounded-xl bg-amber-50 border border-amber-200 px-5 py-3.5 text-amber-800">
+                    <LockClosedIcon className="w-5 h-5 shrink-0 text-amber-600" />
+                    <div>
+                        <p className="text-sm font-bold">Payroll Locked for {MONTHS[month - 1]} {year}</p>
+                        <p className="text-xs font-medium text-amber-700">
+                            Locked by {lockInfo?.lock?.lockedBy?.name || "Admin"}. No further edits are allowed.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Summary Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 <SummaryCard icon={CurrencyRupeeIcon} label="Total Payroll" value={fmt(totalPayroll)} accent="blue" />
                 <SummaryCard icon={UserIcon} label="Employees" value={reports.length} accent="violet" />
@@ -373,9 +441,9 @@ export default function SalaryReport() {
                 <SummaryCard icon={ExclamationCircleIcon} label="Pending" value={fmt(totalPending)} accent="red" />
             </div>
 
-            {/* ── Table Card ───────────────────────────────────────────────────── */}
+            {/* Table Card */}
             <Card noPadding>
-                {/* Toolbar Filter */}
+                {/* Toolbar */}
                 <div className="flex flex-col md:flex-row md:items-center gap-4 px-6 py-4 border-b border-brand-border bg-white">
                     <div className="w-full md:w-32">
                         <FormSelect
@@ -389,7 +457,7 @@ export default function SalaryReport() {
                         <FormSelect
                             value={year}
                             onChange={(e) => { setYear(Number(e.target.value)); setPage(1); }}
-                            options={Array.from({ length: Math.max(now.getFullYear() + 1, 2026) - 2025 + 1 }, (_, i) => 2025 + i).map(y => ({ label: String(y), value: y }))}
+                            options={yearOptions.map((y) => ({ label: String(y), value: y }))}
                             placeholder={false}
                         />
                     </div>
@@ -401,7 +469,6 @@ export default function SalaryReport() {
                     >
                         {loading ? "Loading…" : "Load"}
                     </Button>
-
                     <div className="mt-2 md:mt-0 ml-0 md:ml-auto w-full md:w-64">
                         <FormInput
                             value={search}
@@ -433,7 +500,7 @@ export default function SalaryReport() {
                                                 <ClockIcon className="w-7 h-7 text-slate-400" />
                                             </div>
                                             <p className="text-base font-bold text-slate-600">No employees found</p>
-                                            <p className="text-sm font-medium text-slate-400">Try adjusting your search or loading a different month</p>
+                                            <p className="text-sm font-medium text-slate-400">Try loading a different month or adding employees</p>
                                         </div>
                                     </td>
                                 </tr>
@@ -444,7 +511,9 @@ export default function SalaryReport() {
                                     key={r.employeeId}
                                     report={r}
                                     onSave={handleSave}
+                                    onStatusChange={handleStatusChange}
                                     saving={savingId === r.employeeId}
+                                    isLocked={isLocked}
                                 />
                             ))}
                         </tbody>
@@ -453,7 +522,6 @@ export default function SalaryReport() {
 
                 <Pagination page={page} total={filtered.length} onChange={setPage} />
             </Card>
-
         </div>
     );
 }

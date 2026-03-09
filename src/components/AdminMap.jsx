@@ -25,8 +25,10 @@ const AdminMap = () => {
         const fetchLocations = async () => {
             try {
                 // Switched to correct endpoint
-                const { data } = await api.get("/admin/locations");
-                setEmployees(data);
+                const { data } = await api.get("/employee/locations");
+                // API returns { success, data: [...] } — extract the array safely
+                const list = data?.data ?? data;
+                setEmployees(Array.isArray(list) ? list : []);
             } catch (err) {
                 console.error("Failed to fetch locations", err);
             }
@@ -44,10 +46,10 @@ const AdminMap = () => {
 
             <MapContainer center={[20.5937, 78.9629]} zoom={5} scrollWheelZoom={true} style={{ height: "100%", width: "100%", borderRadius: "10px" }}>
                 {/* OpenStreetMap Tile Layer */}
-                <TileLayer
+                {/* <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
+                /> */}
 
                 {/* Render Markers */}
                 {employees.map((emp) => (

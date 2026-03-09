@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllAttendance } from "../../redux/slices/attendanceSlice";
+import { fetchAllAttendance } from "../attendanceSlice";
 import {
     MagnifyingGlassIcon,
     PencilSquareIcon,
@@ -128,15 +128,20 @@ export function Attendance() {
         setSaving(true);
         try {
             await axios.put(
-                `${import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api"}/attendance/${selectedRecord._id}`,
-                formData,
+                `${import.meta.env.VITE_API_BASE_URL}/attendance/admin/modify`,
+                {
+                    attendanceId: selectedRecord._id,
+                    checkInTime: formData.checkInTime || null,
+                    checkOutTime: formData.checkOutTime || null,
+                    status: formData.status,
+                },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             toast.success("Attendance updated successfully");
             setOpenModal(false);
             dispatch(fetchAllAttendance());
-        } catch {
-            toast.error("Failed to update attendance");
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to update attendance");
         } finally { setSaving(false); }
     };
 
